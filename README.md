@@ -98,4 +98,4 @@ Once M7 (`prompt-ctx`) is done, log your real prompts inside the app itself. By 
 
 ---
 
-*UXD Vibecoding Hackathon 2026 · Prof. Dr. Ignacio Alvarez · Vanchha Chandrayan*
+*UXD Vibecoding Hackathon 2026 · Prof. Dr. Ignacio Alvarez*
