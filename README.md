@@ -11,7 +11,7 @@ This starter gives you:
 - A `useLocalStorage` hook so persistence is one line.
 - Empty TODO markers for every milestone, so AI tools can find them.
 
-What you build, starting at M3:
+What you build, starting at M4:
 
 - The four-column Kanban board.
 - The add / edit / delete modal.
@@ -56,14 +56,13 @@ Replace `<tag-name>` with the tag for the milestone you just finished — see th
 | 4 | `data-model` | Four-column board renders with 3-4 mock tasks |
 | 5 | `crud-modal` | Add / edit / delete tasks via a modal, persisted to localStorage |
 | 6 | `tag-style` | Feature vs. bug visual distinction |
-| 7 | `due-tint` | Cards change color as deadlines approach |
-| 8 | `prompt-ctx` | Prompt Context field saves and shows up on tasks |
-| 9 | `copy-prompt` | One-click copy formatted prompt to clipboard |
-| 10 | `anchors` | Deliverable Anchor Board pinned above the Kanban |
-| 11 | `preview-link` | Live preview URL slot on each task |
-| 12 | `driver` | Assignee badge + "Hand off to..." dropdown |
-| 13 | `gh-fake` | Visual GitHub branch + PR status badge (faked) |
-| 14 | `pitch-ready` | Demo dataset loaded, pitch rehearsed |
+| 7 | `task-owner` | Assignee badge on each card + "Hand off to..." dropdown |
+| 8 | `due-tint` | Cards change color as deadlines approach |
+| 9 | `context` | Curated Context field on the task modal (paste-ready briefing) |
+| 10 | `copy-prompt` | One-click copy formatted prompt to clipboard |
+| 11 | `project-deliverables` | Deliverable Anchor Board pinned above the Kanban |
+| 12 | `secret-sauce` | The one thing that makes your tracker uniquely yours (open-ended) |
+| 13 | `pitch-ready` | Demo dataset loaded, pitch rehearsed |
 
 ## Repo map
 
@@ -97,7 +96,7 @@ Re-deploys happen automatically on every push to `main`.
 
 ## A word about prompts
 
-Once M8 (`prompt-ctx`) is done, log your real prompts inside the app itself. By the end of the hackathon you should have a handful of saved prompt contexts on real tasks — those become part of your Module 5 "Vibe Coding History" deliverable. Free credit, just by using your own tool.
+Once M9 (`context`) is done, keep the Context field of each real task up to date as you work. By the end of the hackathon you should have a handful of curated context blocks on real tasks — those become part of your Module 5 "Vibe Coding History" deliverable. Free credit, just by using your own tool.
 
 ---
 

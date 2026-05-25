@@ -46,7 +46,7 @@ These are the colors the build milestones will reference. Once chosen, paste the
 | `type-feature` | `<TODO>` | Cards tagged `feature` (accent stripe + icon) |
 | `type-bug` | `<TODO>` | Cards tagged `bug` (accent stripe + icon) |
 
-### Due-date states (M7 `due-tint`)
+### Due-date states (M8 `due-tint`)
 
 | Token | Hex | When used |
 |---|---|---|
@@ -91,7 +91,7 @@ Three lines of microcopy that capture the tone of the product. Keep it short —
 | Empty column placeholder | `<TODO>` (e.g. "Nothing here yet — keep going.") |
 | Toast after "Copy as Prompt Context" | `<TODO>` (e.g. "Copied. Now paste it into the AI.") |
 | Confirm-delete message | `<TODO>` (e.g. "Delete this task? You can't undo.") |
-| Handoff toast (M12 `driver`) | `<TODO>` (e.g. "Handed off to {name}. They've got it.") |
+| Handoff toast (M7 `task-owner`) | `<TODO>` (e.g. "Handed off to {name}. They've got it.") |
 
 ## 6. Logo / wordmark
 

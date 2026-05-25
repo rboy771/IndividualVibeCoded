@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Tweak in M5 (tag-style) and M6 (due-tint)
+        // Tweak in M6 (tag-style) and M8 (due-tint)
         feature: '#10B981', // emerald
         bug: '#DC2626',     // crimson
       },

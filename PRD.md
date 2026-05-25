@@ -6,7 +6,7 @@
 
 ## 1. Problem
 
-Vibecoder teams have two recurring pains with large projects:
+Vibecoding teams have two recurring pains with large projects:
 
 1. **They lose track of tasks.** Three teammates, a hundred small things, no shared view. Nothing tells them what state each task is actually in.
 2. **They lose track of prompts.** The AI gave them working code two days ago but no one remembers the prompt that produced it. When they need to iterate, they start from scratch.
@@ -55,15 +55,9 @@ Task = {
   createdDate: string,           // ISO date 'YYYY-MM-DD'
 
   // Added in later milestones:
-  promptContext: {               // M7 prompt-ctx
-    prompt: string,              // the actual prompt text
-    aiTool: string,              // 'Claude' | 'ChatGPT' | 'Cursor' | 'Lovable' | 'Replit' | 'Other'
-    outcome: string,             // 'worked' | 'iterated' | 'scrapped'
-  } | null,
-  previewUrl: string | null,     // M10 preview-link
-  githubBranch: string | null,   // M12 gh-fake
-  prUrl: string | null,          // M12 gh-fake
-  prStatus: 'draft' | 'open' | 'merged' | null,  // M12 gh-fake
+  context: string,               // M9 context — curated briefing for the next AI / teammate
+  contextTool: string | null,    // M9 context — 'Claude' | 'ChatGPT' | 'Cursor' | 'Lovable' | 'Replit' | 'Other'
+  contextUpdatedAt: string|null, // M9 context — ISO timestamp set automatically on save
 }
 
 // One of four pinned deliverable slots.
@@ -117,32 +111,33 @@ Fill in the owner column. Recommended default in **bold**; change if your team h
 | 4 | `data-model` | Task model + board view | **A** | `<TODO>` |
 | 5 | `crud-modal` | Add / edit / delete modal | **A** | `<TODO>` |
 | 6 | `tag-style` | Feature / bug colors | **B** | `<TODO>` |
-| 7 | `due-tint` | Due-date color tinting | **B** | `<TODO>` |
-| 8 | `prompt-ctx` | Prompt context field | **C** | `<TODO>` |
-| 9 | `copy-prompt` | Copy-to-prompt button | **C** | `<TODO>` |
-| 10 | `anchors` | Deliverable Anchor Board | **B** | `<TODO>` |
-| 11 | `preview-link` | Live preview URL slot | **B** | `<TODO>` |
-| 12 | `driver` | Driver + handoff | **A** | `<TODO>` |
-| 13 | `gh-fake` | GitHub mock badge | **C** | `<TODO>` |
-| 14 | `pitch-ready` | Demo + pitch rehearsal | **All** | `<TODO>` |
+| 7 | `task-owner` | Owner indicator + handoff | **A** | `<TODO>` |
+| 8 | `due-tint` | Due-date color tinting | **B** | `<TODO>` |
+| 9 | `context` | Context field on the task modal | **C** | `<TODO>` |
+| 10 | `copy-prompt` | "Copy as Prompt Context" button | **C** | `<TODO>` |
+| 11 | `anchors` | Deliverable Anchor Board | **B** | `<TODO>` |
+| 12 | `secret-sauce` | The one thing that makes it yours | **C / All** | `<TODO>` |
+| 13 | `pitch-ready` | Demo + pitch rehearsal | **All** | `<TODO>` |
 
-Track A owns the state model. Track B owns the visuals (and design — M3 runs parallel to M2 so the team starts Phase 3 with the palette already chosen). Track C owns the differentiator features (M8 + M9 — the prompt context pair). Put your strongest prompter on Track C.
 
-**Dependency note.** M3 (`design-done`) runs **in parallel with M2** — Person B drafts DESIGN.md and pastes the colors into `tailwind.config.js` while the rest of the team reviews the PRD. M6 / M7 / M10 / M11 / M12 / M13 all depend on M4 + M5 being done first. While Person A builds M4+M5 (first ~60 min of Phase 3), Person C should draft the Markdown template for the "Copy as Prompt Context" output (M9).
+Track A owns the state model and task ownership. Track B owns the visuals (and design — M3 runs parallel to M2 so the team starts Phase 3 with the palette already chosen). Track C owns the differentiator features (M9 + M10 — the context field and the Copy-as-Prompt button) and usually leads on M12 secret-sauce. Put your strongest prompter on Track C.
+
+**Dependency note.** M3 (`design-done`) runs **in parallel with M2** — Person B drafts DESIGN.md and pastes the colors into `tailwind.config.js` while the rest of the team reviews the PRD. M6 / M7 / M8 / M11 all depend on M4 + M5 being done first. While Person A builds M4+M5 (first ~60 min of Phase 3), Person C should draft the Markdown template for the "Copy as Prompt Context" output (M10). M12 `secret-sauce` is open-ended — pick whatever makes the tracker uniquely yours; constraint is "must be visible in the demo and must not break anything else."
 
 ## 10. AI / vibe coding angle
 
 Where AI will be heavily used:
 - M4, M5: scaffold the board and the modal from a single prompt each.
-- M8, M9: write the Markdown serialization helper.
-- M12: animation polish for the handoff toast.
+- M9, M10: write the Markdown serialization helper for the Context field.
+- M7: animation polish for the handoff toast.
 
 Where AI will **not** save you time:
 - M2 (this PRD review) — read it yourself.
 - M3 (DESIGN.md) — design taste is yours, not the model's.
-- M14 (pitch) — write the script in your own voice.
+- M12 (secret-sauce) — the whole point is that AI can't predict it.
+- M13 (pitch) — write the script in your own voice.
 
-Log your prompts inside the app itself once M8 is done. This becomes part of the Module 5 "Vibe Coding History" deliverable.
+Keep the Context field of each real task up to date as you work. By the end of the hackathon you should have a handful of curated context blocks — those become part of your Module 5 "Vibe Coding History" deliverable.
 
 ## 11. Team identity
 
@@ -155,19 +150,19 @@ Fill in:
 ## 12. Out of scope (do not build)
 
 - Authentication / accounts.
-- Real GitHub integration (M12 is a visual mock only).
+- Real GitHub integration.
+- A real backend / shared database.
 - Mobile responsive — desktop only is fine.
 - Multi-team support.
 - Real-time collaboration.
-- Any backend.
 
 ## 13. Definition of done
 
-The hackathon is "done" when all 14 milestone tags are pushed to your repo and visible on the dashboard. The pitch is "done" when:
+The hackathon is "done" when all 13 milestone tags are pushed to your repo and visible on the dashboard. The pitch is "done" when:
 
 - The board loads on Vercel without errors.
 - The "Copy as Prompt Context" demo works on stage.
-- You have the 5 pitch ready.
+- 5 min pitch is rehearsed.
 
 ---
 

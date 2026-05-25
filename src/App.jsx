@@ -8,16 +8,15 @@ import { useState, useEffect } from 'react';
  * localStorage helper. Everything visible on screen, you build.
  *
  * Where to start (build sequence in Phase 3):
- *   - M4  data-model   : render the four columns and the task cards below.
- *   - M5  crud-modal   : add the "+" button modal and the edit-on-click modal.
- *   - M6  tag-style    : feature vs. bug color coding (uses DESIGN.md §2 colors).
- *   - M7  due-tint     : color cards by due date (uses DESIGN.md §2 due-state colors).
- *   - M8  prompt-ctx   : the prompt context field on the modal.
- *   - M9  copy-prompt  : the "Copy as Prompt Context" button.
- *   - M10 anchors      : the Anchor Board above the Kanban.
- *   - M11 preview-link : per-task "View live" link.
- *   - M12 driver       : assignee badge + "Hand off to..." dropdown.
- *   - M13 gh-fake      : faked GitHub branch + PR badge.
+ *   - M4  data-model    : render the four columns and the task cards below.
+ *   - M5  crud-modal    : add the "+" button modal and the edit-on-click modal.
+ *   - M6  tag-style     : feature vs. bug color coding (uses DESIGN.md §2 colors).
+ *   - M7  task-owner    : assignee badge + "Hand off to..." dropdown.
+ *   - M8  due-tint      : color cards by due date (uses DESIGN.md §2 due-state colors).
+ *   - M9  context       : a curated Context briefing field on the modal.
+ *   - M10 copy-prompt   : a "Copy as Prompt Context" button that serializes the task + context.
+ *   - M11 anchors       : the Anchor Board above the Kanban.
+ *   - M12 secret-sauce  : the one open-ended thing that makes your tracker yours.
  *
  * Search the file for `TODO M<n>` to find the right hook for each milestone.
  */
@@ -81,7 +80,7 @@ export default function App() {
   // TODO M5 crud-modal:
   //   const [editing, setEditing] = useState(null);
   //
-  // TODO M10 anchors:
+  // TODO M11 anchors:
   //   const [anchors, setAnchors] = useLocalStorage('vibetracker.anchors', [...]);
 
   return (
@@ -98,7 +97,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* TODO M10 anchors: render the Anchor Board (Presentation / Demo / Report / Documentation) above the board. */}
+      {/* TODO M11 anchors: render the Anchor Board (Presentation / Demo / Report / Documentation) above the board. */}
 
       {/*
         TODO M4 data-model:
