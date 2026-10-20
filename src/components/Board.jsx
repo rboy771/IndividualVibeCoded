@@ -6,7 +6,14 @@ import TaskCard from './TaskCard';
  * 4-column responsive grid layout rendering STAGES ('To Do', 'In Progress', 'Review', 'Done').
  * Columns feature clean header with task counts, container styling, and TaskCard items.
  */
-export default function Board({ stages, tasks, onStatusChange, onTaskClick, onEditTask }) {
+export default function Board({
+  stages,
+  tasks,
+  onStatusChange,
+  onAssigneeChange,
+  onTaskClick,
+  onEditTask,
+}) {
   return (
     <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
       {stages.map((stage) => {
@@ -37,6 +44,7 @@ export default function Board({ stages, tasks, onStatusChange, onTaskClick, onEd
                     key={task.id}
                     task={task}
                     onStatusChange={onStatusChange}
+                    onAssigneeChange={onAssigneeChange}
                     onCardClick={onTaskClick}
                     onEdit={onEditTask}
                   />
