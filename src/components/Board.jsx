@@ -4,7 +4,8 @@ import TaskCard from './TaskCard';
 /**
  * Board Component
  * 4-column responsive grid layout rendering STAGES ('To Do', 'In Progress', 'Review', 'Done').
- * Columns feature clean header with task counts, container styling, and TaskCard items.
+ * Columns feature clean header with task counts, container styling, TaskCard items,
+ * and passes through audio/optimizer handlers.
  */
 export default function Board({
   stages,
@@ -14,6 +15,7 @@ export default function Board({
   onTaskClick,
   onEditTask,
   onCopyPrompt,
+  onOpenOptimizer,
 }) {
   return (
     <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -49,6 +51,7 @@ export default function Board({
                     onCardClick={onTaskClick}
                     onEdit={onEditTask}
                     onCopyPrompt={onCopyPrompt}
+                    onOpenOptimizer={onOpenOptimizer}
                   />
                 ))
               ) : (
