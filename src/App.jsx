@@ -4,8 +4,9 @@ import TaskModal from './components/TaskModal';
 import AnchorBoard from './components/AnchorBoard';
 import VibeVelocityBar from './components/VibeVelocityBar';
 import PromptOptimizerModal from './components/PromptOptimizerModal';
-import { seedTasks } from './models/seedTasks';
-import { INITIAL_ANCHORS } from './models/anchors';
+import PitchGuideModal from './components/PitchGuideModal';
+import { seedTasks, generateSeedTasks } from './models/seedTasks';
+import { INITIAL_ANCHORS, getDemoAnchors } from './models/anchors';
 import { vibeAudio } from './utils/vibeAudio';
 
 /**
@@ -45,6 +46,11 @@ import { vibeAudio } from './utils/vibeAudio';
  * - Vibe Velocity & Flow Analytics Bar with neon shimmer meter and momentum stats
  * - AI Prompt Optimizer & Vibe Synthesizer Modal with persona templates, architectural rules & constraints
  * - Web Audio API Micro-Sounds Engine (vibeAudio) with mute/unmute toggle and audio feedback on interactions
+ *
+ * Milestone 13 (pitch-ready):
+ * - High-polish showcase dataset in seedTasks.js with dynamic relative urgency dates
+ * - Interactive in-app 5-Minute Pitch Presentation Guide modal with live timer & rehearsal script
+ * - 1-Click "Reset Demo Dataset" quick button with confirmation dialog for live judge demonstrations
  */
 
 /**
@@ -114,6 +120,10 @@ export default function App() {
   // M12: AI Prompt Optimizer & Vibe Synthesizer Modal state
   const [isOptimizerOpen, setIsOptimizerOpen] = useState(false);
   const [optimizerTask, setOptimizerTask] = useState(null);
+
+  // M13: Pitch Guide & Reset Demo Confirmation state
+  const [isPitchGuideOpen, setIsPitchGuideOpen] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   // Auto-dismiss toast
   useEffect(() => {
@@ -212,6 +222,18 @@ export default function App() {
     );
   };
 
+  // M13: Reset Demo Dataset for live pitch showcase
+  const handleConfirmResetDemo = () => {
+    const freshTasks = generateSeedTasks();
+    const demoAnchors = getDemoAnchors();
+    setTasks(freshTasks);
+    setAnchors(demoAnchors);
+    setCopiedPromptsCount(4);
+    setIsResetConfirmOpen(false);
+    vibeAudio.playAnchorComplete();
+    setToastMessage('🎯 Pitch demo dataset restored! Board is stage-ready.');
+  };
+
   const handleOpenCreateModal = () => {
     vibeAudio.playToggle();
     setEditingTask({});
@@ -254,8 +276,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-page p-4 sm:p-6 text-text-primary antialiased">
-      <div className="mx-auto max-w-7xl">
+    <div className="min-h-screen bg-surface-page p-4 sm:p-6 text-text-primary antialiased flex flex-col justify-between">
+      <div className="mx-auto max-w-7xl w-full flex-1">
+        {/* Header Bar */}
         <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-800 pb-5">
           <div>
             <div className="flex items-center gap-3">
@@ -270,14 +293,45 @@ export default function App() {
               </h1>
             </div>
             <p className="mt-1 text-xs text-text-muted">
-              Team workspace · 4-stage flow · Linear-inspired dark workspace
+              Team workspace · 4-stage flow · Linear-inspired dark workspace · Prepared for Prof. Dr. Ignacio Alvarez
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-xs font-mono text-text-muted">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="text-xs font-mono text-text-muted hidden md:inline">
               {tasks.length} total tasks
             </span>
+
+            {/* M13 Interactive Pitch Guide Trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                vibeAudio.playToggle();
+                setIsPitchGuideOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/50 bg-gradient-to-r from-purple-900/40 to-indigo-900/40 px-3 py-2 text-xs font-semibold text-purple-200 hover:text-white hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.25)] transition-all"
+              title="Open 5-Minute Pitch Presentation Guide & Demo Script"
+            >
+              <span>🎙️</span>
+              <span>Pitch Guide</span>
+              <span className="hidden sm:inline rounded bg-purple-500/25 px-1.5 py-0.2 text-[10px] text-purple-200 font-mono">
+                5m
+              </span>
+            </button>
+
+            {/* M13 Reset Demo Data Trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                vibeAudio.playToggle();
+                setIsResetConfirmOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-2 text-xs font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-all shadow-sm"
+              title="Restore clean pitch showcase dataset"
+            >
+              <span>🔄</span>
+              <span className="hidden sm:inline">Reset Demo</span>
+            </button>
 
             {/* M12 Prompt Synthesizer Hero Header Button */}
             <button
@@ -287,9 +341,10 @@ export default function App() {
               title="Open AI Prompt Optimizer & Vibe Synthesizer"
             >
               <span>✨</span>
-              <span>AI Synthesizer</span>
+              <span className="hidden sm:inline">AI Synthesizer</span>
             </button>
 
+            {/* New Task Hero Action */}
             <button
               type="button"
               onClick={handleOpenCreateModal}
@@ -356,6 +411,65 @@ export default function App() {
           onPromptCopied={() => setCopiedPromptsCount((prev) => (Number(prev) || 0) + 1)}
         />
 
+        {/* M13: Interactive Pitch Guide Presentation Modal */}
+        <PitchGuideModal
+          isOpen={isPitchGuideOpen}
+          onClose={() => setIsPitchGuideOpen(false)}
+          onResetDemoData={() => {
+            setIsPitchGuideOpen(false);
+            handleConfirmResetDemo();
+          }}
+          onOpenSynthesizer={() => {
+            setIsPitchGuideOpen(false);
+            handleOpenOptimizer(null);
+          }}
+        />
+
+        {/* M13: Reset Demo Dataset Confirmation Dialog */}
+        {isResetConfirmOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+            <div
+              className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/15 border border-purple-500/30 text-xl">
+                  🎯
+                </span>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    Reset to Pitch Showcase Dataset?
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Clean slate for live judge evaluation
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-lg border border-slate-800">
+                This restores 8 active sprint tasks across all 4 stages with calibrated due-date urgency tints (Overdue, Warning, Safe), curated AI context briefings, and sets Anchor Deliverables to presentation readiness.
+              </p>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsResetConfirmOpen(false)}
+                  className="rounded-lg border border-slate-700 px-3.5 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmResetDemo}
+                  className="rounded-lg bg-brand-primary px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-brand-primary/30 hover:bg-indigo-600 transition-colors"
+                >
+                  Confirm & Reset
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Handoff, Anchor & Prompt Copy Toast Notification */}
         {toastMessage && (
           <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-lg border border-brand-primary/40 bg-slate-900/95 px-4 py-3 text-xs font-medium text-slate-100 shadow-xl backdrop-blur transition-opacity duration-200">
@@ -364,6 +478,40 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {/* Footer Navigation & Credits */}
+      <footer className="mx-auto max-w-7xl w-full border-t border-slate-800/80 mt-10 pt-4 pb-2 flex flex-col sm:flex-row items-center justify-between text-[11px] text-text-muted gap-3">
+        <div className="flex items-center gap-2">
+          <span>VibeTracker · Individual Hackathon Edition</span>
+          <span>·</span>
+          <span>Prof. Dr. Ignacio Alvarez</span>
+          <span>·</span>
+          <span className="text-emerald-400 font-medium">13/13 Milestones Complete</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => {
+              vibeAudio.playToggle();
+              setIsPitchGuideOpen(true);
+            }}
+            className="hover:text-purple-300 transition-colors"
+          >
+            🎙️ Pitch Presentation Guide
+          </button>
+          <span>·</span>
+          <button
+            type="button"
+            onClick={() => {
+              vibeAudio.playToggle();
+              setIsResetConfirmOpen(true);
+            }}
+            className="hover:text-slate-200 transition-colors"
+          >
+            🔄 Restore Demo State
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }
