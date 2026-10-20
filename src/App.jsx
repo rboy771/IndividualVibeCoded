@@ -14,6 +14,21 @@ import { seedTasks } from './models/seedTasks';
  * - Distinctive colored initials avatar + name per teammate
  * - Inline quick "Hand off to..." teammate dropdown on TaskCard
  * - Full state update & localStorage persistence with smooth handoff feedback
+ *
+ * Milestone 8 (due-tint):
+ * - Dynamic relative due date calculation (overdue, today, tomorrow, safe, neutral)
+ * - DueBadge component with icons and color-coded status
+ * - Urgency indicators and card tinting
+ *
+ * Milestone 9 (context):
+ * - Dedicated AI Context Briefing section in TaskModal
+ * - Target AI tool selector ('Claude', 'ChatGPT', 'Cursor', etc.)
+ * - Context briefing persistence with automated contextUpdatedAt timestamp
+ *
+ * Milestone 10 (copy-prompt):
+ * - Structured Markdown prompt serialization optimized for AI continuation
+ * - Quick copy button on TaskCard & hero action on TaskModal
+ * - Clipboard writing with fallback and visual feedback toast
  */
 
 /**
@@ -101,6 +116,12 @@ export default function App() {
     setToastMessage(`Task handed off to ${newAssignee}. Smooth sailing.`);
   };
 
+  // Quick copy prompt feedback handler (M10)
+  const handleCopyPrompt = () => {
+    // Microcopy from DESIGN.md: "Prompt context copied to clipboard. Ready to paste."
+    setToastMessage('Prompt context copied to clipboard. Ready to paste.');
+  };
+
   const handleOpenCreateModal = () => {
     setEditingTask({});
     setIsModalOpen(true);
@@ -180,19 +201,21 @@ export default function App() {
             onAssigneeChange={handleAssigneeChange}
             onTaskClick={handleOpenEditModal}
             onEditTask={handleOpenEditModal}
+            onCopyPrompt={handleCopyPrompt}
           />
         </main>
 
-        {/* M5 CRUD TaskModal */}
+        {/* M5 CRUD TaskModal with M9 Context & M10 Prompt Copy */}
         <TaskModal
           isOpen={isModalOpen}
           task={editingTask}
           onClose={handleCloseModal}
           onSave={handleSaveTask}
           onDelete={handleDeleteTask}
+          onCopyPrompt={handleCopyPrompt}
         />
 
-        {/* M7 Handoff Toast Notification */}
+        {/* Handoff & Prompt Copy Toast Notification */}
         {toastMessage && (
           <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-lg border border-brand-primary/40 bg-slate-900/95 px-4 py-3 text-xs font-medium text-slate-100 shadow-xl backdrop-blur transition-opacity duration-200">
             <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
