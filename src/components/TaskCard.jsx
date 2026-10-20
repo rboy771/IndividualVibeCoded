@@ -3,6 +3,7 @@ import { TEAM } from '../App';
 import DueBadge from './DueBadge';
 import { getDueStatus } from '../utils/dueTint';
 import { serializeTaskPrompt, copyTextToClipboard } from '../utils/contextHelper';
+import { vibeAudio } from '../utils/vibeAudio';
 
 /**
  * Assignee Color & Avatar Helpers
@@ -59,7 +60,8 @@ export function getAssigneeMeta(name) {
  * TaskCard Component
  * Displays task details: title, description preview, status selector,
  * quick assignee handoff dropdown, refined M6 feature/bug tag styling,
- * M8 due badge & urgency tinting, M9 context preview, and M10 prompt copy button.
+ * M8 due badge & urgency tinting, M9 context preview, M10 prompt copy button,
+ * and M12 AI prompt optimizer trigger & audio feedback.
  */
 export default function TaskCard({
   task,
@@ -68,6 +70,7 @@ export default function TaskCard({
   onCardClick,
   onEdit,
   onCopyPrompt,
+  onOpenOptimizer,
 }) {
   const isFeature = task.type === 'feature';
   const assigneeMeta = getAssigneeMeta(task.assignee);
@@ -89,6 +92,7 @@ export default function TaskCard({
     const success = await copyTextToClipboard(promptText);
     if (success) {
       setIsCopied(true);
+      vibeAudio.playPromptCopy();
       setTimeout(() => setIsCopied(false), 2000);
       if (onCopyPrompt) {
         onCopyPrompt(task);
@@ -96,10 +100,24 @@ export default function TaskCard({
     }
   };
 
+  const handleOpenOptimizerClick = (e) => {
+    e.stopPropagation();
+    vibeAudio.playSynthesize();
+    if (onOpenOptimizer) {
+      onOpenOptimizer(task);
+    }
+  };
+
   const handleStatusSelect = (e) => {
     e.stopPropagation();
+    const newStatus = e.target.value;
+    if (newStatus === 'done') {
+      vibeAudio.playTaskComplete();
+    } else {
+      vibeAudio.playTaskMove();
+    }
     if (onStatusChange) {
-      onStatusChange(task.id, e.target.value);
+      onStatusChange(task.id, newStatus);
     }
   };
 
@@ -175,6 +193,17 @@ export default function TaskCard({
         </span>
 
         <div className="flex items-center gap-1.5">
+          {/* M12 Quick AI Prompt Optimizer trigger */}
+          <button
+            type="button"
+            onClick={handleOpenOptimizerClick}
+            className="rounded p-1 text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-slate-700/60 hover:text-cyan-300 transition-all"
+            title="✨ Optimize prompt with AI Best Practices"
+            aria-label="Optimize prompt with AI Best Practices"
+          >
+            <span className="text-xs">✨</span>
+          </button>
+
           {/* M10 Quick Copy as Prompt Context button */}
           <button
             type="button"

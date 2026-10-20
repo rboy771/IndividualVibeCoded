@@ -6,6 +6,7 @@ import {
   serializeTaskPrompt,
   copyTextToClipboard,
 } from '../utils/contextHelper';
+import { vibeAudio } from '../utils/vibeAudio';
 
 /**
  * TaskModal Component
@@ -19,6 +20,7 @@ import {
  * - Due Date ('YYYY-MM-DD')
  * - M9 AI Context Briefing (curated briefing for next AI/teammate, contextTool, contextUpdatedAt)
  * - M10 Copy as Prompt Context hero action
+ * - M12 Enhance Prompt with AI Best Practices & Vibe Synthesizer trigger
  * - Delete action with confirmation when editing an existing task
  * - Backdrop click & Escape key to dismiss
  */
@@ -29,6 +31,7 @@ export default function TaskModal({
   onSave,
   onDelete,
   onCopyPrompt,
+  onOpenOptimizer,
 }) {
   const isEditing = Boolean(task && task.id);
 
@@ -119,6 +122,7 @@ export default function TaskModal({
     const success = await copyTextToClipboard(promptText);
     if (success) {
       setIsCopied(true);
+      vibeAudio.playPromptCopy();
       setTimeout(() => setIsCopied(false), 2000);
       if (onCopyPrompt) {
         onCopyPrompt(currentDraft);
@@ -341,33 +345,56 @@ export default function TaskModal({
                 </div>
               </div>
 
-              {/* M10 Hero Button: Copy as Prompt Context */}
-              <button
-                type="button"
-                onClick={handleCopyPromptModal}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                  isCopied
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 ring-1 ring-emerald-500/50'
-                    : 'bg-brand-primary/20 text-indigo-200 border border-brand-primary/40 hover:bg-brand-primary/30 hover:text-white'
-                }`}
-                title="Copy task details and briefing formatted as an AI prompt"
-              >
-                {isCopied ? (
-                  <>
-                    <svg className="h-3.5 w-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Copied Prompt!</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-3.5 w-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                    </svg>
-                    <span>Copy as Prompt Context</span>
-                  </>
-                )}
-              </button>
+              {/* Action Buttons: M12 Enhance with AI + M10 Copy as Prompt Context */}
+              <div className="flex flex-wrap items-center gap-2">
+                {/* M12 Enhance Prompt with AI Best Practices */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    vibeAudio.playSynthesize();
+                    if (onOpenOptimizer) {
+                      onOpenOptimizer({
+                        ...(task || {}),
+                        ...formData,
+                        id: task?.id || 'draft-modal',
+                      });
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/15 px-2.5 py-1.5 text-xs font-semibold text-purple-200 transition-all hover:bg-purple-500/25 hover:text-white"
+                  title="Enhance & synthesize prompt with persona templates and architectural guidelines"
+                >
+                  <span>✨</span>
+                  <span>Enhance with AI</span>
+                </button>
+
+                {/* M10 Hero Button: Copy as Prompt Context */}
+                <button
+                  type="button"
+                  onClick={handleCopyPromptModal}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                    isCopied
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 ring-1 ring-emerald-500/50'
+                      : 'bg-brand-primary/20 text-indigo-200 border border-brand-primary/40 hover:bg-brand-primary/30 hover:text-white'
+                  }`}
+                  title="Copy task details and briefing formatted as an AI prompt"
+                >
+                  {isCopied ? (
+                    <>
+                      <svg className="h-3.5 w-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Copied Prompt!</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-3.5 w-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </svg>
+                      <span>Copy as Prompt Context</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Tool Selector & Timestamp row */}
