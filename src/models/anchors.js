@@ -133,6 +133,56 @@ export const INITIAL_ANCHORS = [
 ];
 
 /**
+ * Returns a fully populated, showcase-ready deliverable anchor set
+ * for live pitch presentations and demo resets.
+ * @returns {Array<Object>}
+ */
+export function getDemoAnchors() {
+  return [
+    {
+      id: 'presentation',
+      label: 'Presentation',
+      category: 'Slides & Pitch Deck',
+      icon: '📽️',
+      url: 'https://slides.google.com/presentation/d/1vibe-coding-hackathon-2026-pitch/edit',
+      status: 'ready',
+      notes: '5-minute pitch deck for Prof. Dr. Ignacio Alvarez and judges. Hook, architecture, demo, and metrics.',
+      lastUpdated: new Date().toISOString(),
+    },
+    {
+      id: 'demo',
+      label: 'Demo',
+      category: 'Live App Deployment',
+      icon: '⚡',
+      url: 'https://vibetracker.vercel.app',
+      status: 'ready',
+      notes: 'Production Vercel deployment with localStorage persistence, audio engine, and prompt synthesizer.',
+      lastUpdated: new Date().toISOString(),
+    },
+    {
+      id: 'report',
+      label: 'Report',
+      category: 'Project Write-up & PDF',
+      icon: '📄',
+      url: 'https://docs.google.com/document/d/1vibe-coding-final-report-2026/edit',
+      status: 'in-progress',
+      notes: 'Module 5 final project report detailing architecture, velocity metrics, and team retrospectives.',
+      lastUpdated: new Date(Date.now() - 3600000 * 2).toISOString(),
+    },
+    {
+      id: 'documentation',
+      label: 'Documentation',
+      category: 'Architecture & Readme',
+      icon: '📚',
+      url: 'https://github.com/c24034652/Individualhackathon#readme',
+      status: 'ready',
+      notes: 'Comprehensive README, milestone specs, PITCH.md guide, and architecture blueprints.',
+      lastUpdated: new Date().toISOString(),
+    },
+  ];
+}
+
+/**
  * Format relative time from an ISO timestamp
  * @param {string | null} isoString
  * @returns {string}
