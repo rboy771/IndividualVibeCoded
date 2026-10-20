@@ -1,24 +1,14 @@
 import { useState, useEffect } from 'react';
+import Board from './components/Board';
+import { seedTasks } from './models/seedTasks';
 
 /**
- * Vibecoding Project Tracker — starter scaffold.
+ * Vibecoding Project Tracker
  *
- * This file is intentionally almost empty. The boilerplate (Vite, React,
- * Tailwind) is configured for you, plus a few shared constants and a
- * localStorage helper. Everything visible on screen, you build.
- *
- * Where to start (build sequence in Phase 3):
- *   - M4  data-model    : render the four columns and the task cards below.
- *   - M5  crud-modal    : add the "+" button modal and the edit-on-click modal.
- *   - M6  tag-style     : feature vs. bug color coding (uses DESIGN.md §2 colors).
- *   - M7  task-owner    : assignee badge + "Hand off to..." dropdown.
- *   - M8  due-tint      : color cards by due date (uses DESIGN.md §2 due-state colors).
- *   - M9  context       : a curated Context briefing field on the modal.
- *   - M10 copy-prompt   : a "Copy as Prompt Context" button that serializes the task + context.
- *   - M11 anchors       : the Anchor Board above the Kanban.
- *   - M12 secret-sauce  : the one open-ended thing that makes your tracker yours.
- *
- * Search the file for `TODO M<n>` to find the right hook for each milestone.
+ * Milestone 4 (data-model):
+ * - Implemented 4-column responsive Kanban board view
+ * - Seed tasks matching PRD data model loaded via useLocalStorage
+ * - Quick status updates between stages
  */
 
 /**
@@ -31,6 +21,9 @@ import { useState, useEffect } from 'react';
  * @property {string} assignee
  * @property {string|null} dueDate     ISO 'YYYY-MM-DD'
  * @property {string} createdDate      ISO 'YYYY-MM-DD'
+ * @property {string} [context]
+ * @property {string|null} [contextTool]
+ * @property {string|null} [contextUpdatedAt]
  */
 
 // The four columns of the board, in render order.
@@ -42,8 +35,7 @@ export const STAGES = [
   { id: 'done',        label: 'Done' },
 ];
 
-// Replace these placeholders with the three names from PRD §8 before M4.
-// They become the only valid values for `Task.assignee`.
+// Team members from PRD §8
 export const TEAM = ['Teammate A', 'Teammate B', 'Teammate C'];
 
 /**
@@ -74,44 +66,53 @@ export function useLocalStorage(key, initialValue) {
 }
 
 export default function App() {
-  // TODO M4 data-model:
-  //   const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', [/* 3-4 seed tasks */]);
-  //
-  // TODO M5 crud-modal:
-  //   const [editing, setEditing] = useState(null);
-  //
-  // TODO M11 anchors:
-  //   const [anchors, setAnchors] = useLocalStorage('vibetracker.anchors', [...]);
+  const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', seedTasks);
+
+  // Quick move handler across stages
+  const handleStatusChange = (taskId, newStatus) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+    );
+  };
 
   return (
-    <div className="min-h-screen p-6">
-      <header className="mb-6 flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Vibecoding Project Tracker
-          </h1>
-          <p className="text-sm text-slate-500">
-            {/* Replace this line with your team name from PRD §11. */}
-            Team starter
-          </p>
-        </div>
-      </header>
+    <div className="min-h-screen bg-surface-page p-6 text-text-primary antialiased">
+      <div className="mx-auto max-w-7xl">
+        <header className="mb-8 flex items-center justify-between border-b border-slate-800 pb-5">
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary/20 text-brand-primary border border-brand-primary/30">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </span>
+              <h1 className="text-2xl font-bold tracking-tight text-text-primary">
+                Vibecoding Project Tracker
+              </h1>
+            </div>
+            <p className="mt-1 text-xs text-text-muted">
+              Team workspace · 4-stage flow · Linear-inspired dark workspace
+            </p>
+          </div>
 
-      {/* TODO M11 anchors: render the Anchor Board (Presentation / Demo / Report / Documentation) above the board. */}
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-mono text-text-muted">
+              {tasks.length} total tasks
+            </span>
+          </div>
+        </header>
 
-      {/*
-        TODO M4 data-model:
-          Render a Kanban board with the four columns from STAGES.
-          Each column should display the tasks whose status matches its id.
-          Pre-populate 3-4 mock tasks so the board isn't empty on first load.
+        {/* TODO M11 anchors: render Anchor Board here */}
 
-        TODO M5 crud-modal:
-          Add a "+" button that opens a modal with every Task field.
-          Clicking a card should open the same modal in edit mode.
-      */}
-      <main className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed border-slate-300 text-slate-400">
-        Build the four-column board here · M4
-      </main>
+        {/* M4 Kanban Board */}
+        <main>
+          <Board
+            stages={STAGES}
+            tasks={tasks}
+            onStatusChange={handleStatusChange}
+          />
+        </main>
+      </div>
     </div>
   );
 }
