@@ -5,8 +5,17 @@ import React from 'react';
  * Displays task details: title, description preview, status selector,
  * assignee badge, type badge ('feature' | 'bug'), and due date.
  */
-export default function TaskCard({ task, onStatusChange, onCardClick }) {
+export default function TaskCard({ task, onStatusChange, onCardClick, onEdit }) {
   const isFeature = task.type === 'feature';
+
+  const handleEditClick = (e) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit(task);
+    } else if (onCardClick) {
+      onCardClick(task);
+    }
+  };
 
   const handleStatusSelect = (e) => {
     e.stopPropagation();
@@ -15,9 +24,17 @@ export default function TaskCard({ task, onStatusChange, onCardClick }) {
     }
   };
 
+  const handleCardClick = () => {
+    if (onEdit) {
+      onEdit(task);
+    } else if (onCardClick) {
+      onCardClick(task);
+    }
+  };
+
   return (
     <div
-      onClick={() => onCardClick && onCardClick(task)}
+      onClick={handleCardClick}
       className="group relative flex flex-col rounded-lg border border-slate-700/60 bg-surface-card p-4 shadow-card transition-all duration-150 hover:-translate-y-0.5 hover:border-slate-600 hover:shadow-card-hover cursor-pointer"
     >
       {/* Type indicator & quick actions */}
@@ -37,19 +54,34 @@ export default function TaskCard({ task, onStatusChange, onCardClick }) {
           {task.type || 'feature'}
         </span>
 
-        {/* Status quick mover */}
-        <select
-          value={task.status}
-          onChange={handleStatusSelect}
-          onClick={(e) => e.stopPropagation()}
-          className="rounded bg-slate-900/70 px-2 py-0.5 text-xs font-medium text-text-muted border border-slate-700/80 hover:text-text-primary focus:border-brand-primary focus:outline-none cursor-pointer"
-          aria-label="Change status"
-        >
-          <option value="todo">To Do</option>
-          <option value="in-progress">In Progress</option>
-          <option value="review">Review</option>
-          <option value="done">Done</option>
-        </select>
+        <div className="flex items-center gap-1.5">
+          {/* Edit button */}
+          <button
+            type="button"
+            onClick={handleEditClick}
+            className="rounded p-1 text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-slate-700/60 hover:text-slate-200 transition-opacity"
+            title="Edit task"
+            aria-label="Edit task"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
+
+          {/* Status quick mover */}
+          <select
+            value={task.status}
+            onChange={handleStatusSelect}
+            onClick={(e) => e.stopPropagation()}
+            className="rounded bg-slate-900/70 px-2 py-0.5 text-xs font-medium text-text-muted border border-slate-700/80 hover:text-text-primary focus:border-brand-primary focus:outline-none cursor-pointer"
+            aria-label="Change status"
+          >
+            <option value="todo">To Do</option>
+            <option value="in-progress">In Progress</option>
+            <option value="review">Review</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
       </div>
 
       {/* Task title */}
