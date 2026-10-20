@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { TEAM } from '../App';
+import DueBadge from './DueBadge';
+import { getDueStatus } from '../utils/dueTint';
+import { serializeTaskPrompt, copyTextToClipboard } from '../utils/contextHelper';
 
 /**
  * Assignee Color & Avatar Helpers
@@ -55,7 +58,8 @@ export function getAssigneeMeta(name) {
 /**
  * TaskCard Component
  * Displays task details: title, description preview, status selector,
- * quick assignee handoff dropdown, refined M6 feature/bug tag styling, and due date.
+ * quick assignee handoff dropdown, refined M6 feature/bug tag styling,
+ * M8 due badge & urgency tinting, M9 context preview, and M10 prompt copy button.
  */
 export default function TaskCard({
   task,
@@ -63,10 +67,12 @@ export default function TaskCard({
   onAssigneeChange,
   onCardClick,
   onEdit,
+  onCopyPrompt,
 }) {
   const isFeature = task.type === 'feature';
   const assigneeMeta = getAssigneeMeta(task.assignee);
-  const [isHandoffOpen, setIsHandoffOpen] = useState(false);
+  const dueInfo = getDueStatus(task.dueDate, task.status);
+  const [isCopied, setIsCopied] = useState(false);
 
   const handleEditClick = (e) => {
     e.stopPropagation();
@@ -74,6 +80,19 @@ export default function TaskCard({
       onEdit(task);
     } else if (onCardClick) {
       onCardClick(task);
+    }
+  };
+
+  const handleCopyPromptClick = async (e) => {
+    e.stopPropagation();
+    const promptText = serializeTaskPrompt(task);
+    const success = await copyTextToClipboard(promptText);
+    if (success) {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+      if (onCopyPrompt) {
+        onCopyPrompt(task);
+      }
     }
   };
 
@@ -100,14 +119,16 @@ export default function TaskCard({
     }
   };
 
+  const borderAccent = isFeature
+    ? 'border-l-[3px] border-l-emerald-500'
+    : 'border-l-[3px] border-l-rose-500';
+
+  const dueCardTint = task.status !== 'done' ? dueInfo.cardClasses : '';
+
   return (
     <div
       onClick={handleCardClick}
-      className={`group relative flex flex-col rounded-lg border bg-surface-card p-4 shadow-card transition-all duration-150 hover:-translate-y-0.5 hover:shadow-card-hover cursor-pointer ${
-        isFeature
-          ? 'border-slate-700/60 border-l-[3px] border-l-emerald-500 hover:border-slate-600'
-          : 'border-slate-700/60 border-l-[3px] border-l-rose-500 hover:border-slate-600'
-      }`}
+      className={`group relative flex flex-col rounded-lg border bg-surface-card p-4 shadow-card transition-all duration-150 hover:-translate-y-0.5 hover:shadow-card-hover cursor-pointer border-slate-700/60 hover:border-slate-600 ${borderAccent} ${dueCardTint}`}
     >
       {/* Top bar: Type indicator badge & quick actions */}
       <div className="mb-2 flex items-center justify-between gap-2">
@@ -154,6 +175,29 @@ export default function TaskCard({
         </span>
 
         <div className="flex items-center gap-1.5">
+          {/* M10 Quick Copy as Prompt Context button */}
+          <button
+            type="button"
+            onClick={handleCopyPromptClick}
+            className={`rounded p-1 transition-all ${
+              isCopied
+                ? 'text-emerald-400 bg-emerald-500/20 opacity-100 ring-1 ring-emerald-500/40'
+                : 'text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-slate-700/60 hover:text-brand-accent'
+            }`}
+            title={isCopied ? 'Copied prompt context!' : 'Copy as Prompt Context'}
+            aria-label="Copy as Prompt Context"
+          >
+            {isCopied ? (
+              <svg className="h-3.5 w-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+            )}
+          </button>
+
           {/* Edit button */}
           <button
             type="button"
@@ -183,10 +227,18 @@ export default function TaskCard({
         </div>
       </div>
 
-      {/* Task title */}
-      <h3 className="text-sm font-medium leading-snug text-text-primary group-hover:text-brand-accent transition-colors">
-        {task.title}
-      </h3>
+      {/* Task title with urgency icon if overdue */}
+      <div className="flex items-start gap-1.5">
+        {dueInfo.isOverdue && task.status !== 'done' && (
+          <span
+            className="mt-1 flex h-2 w-2 shrink-0 rounded-full bg-rose-500 animate-pulse"
+            title="Overdue or due today!"
+          />
+        )}
+        <h3 className="text-sm font-medium leading-snug text-text-primary group-hover:text-brand-accent transition-colors">
+          {task.title}
+        </h3>
+      </div>
 
       {/* Description preview */}
       {task.description && (
@@ -195,7 +247,22 @@ export default function TaskCard({
         </p>
       )}
 
-      {/* Meta info: Assignee badge + Quick hand-off & Due date */}
+      {/* M9 Context briefing badge indicator */}
+      {task.context && (
+        <div className="mt-2.5 flex items-center gap-1.5">
+          <span
+            className="inline-flex items-center gap-1 rounded bg-indigo-500/10 px-2 py-0.5 text-[10px] font-mono text-indigo-300 border border-indigo-500/20"
+            title={`AI Briefing (${task.contextTool || 'Unspecified'}):\n${task.context.slice(0, 140)}`}
+          >
+            <svg className="h-2.5 w-2.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>{task.contextTool || 'AI'} context</span>
+          </span>
+        </div>
+      )}
+
+      {/* Meta info: Assignee badge + Quick hand-off & M8 Due date badge */}
       <div className="mt-4 flex items-center justify-between border-t border-slate-700/40 pt-2.5 text-xs">
         {/* M7 Assignee badge + Quick hand-off dropdown */}
         <div className="relative flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
@@ -234,27 +301,8 @@ export default function TaskCard({
           </div>
         </div>
 
-        {/* Due Date */}
-        {task.dueDate ? (
-          <div className="flex items-center gap-1 font-mono text-[11px] text-text-muted">
-            <svg
-              className="h-3.5 w-3.5 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <span>{task.dueDate}</span>
-          </div>
-        ) : (
-          <span className="text-[11px] text-slate-600">No due date</span>
-        )}
+        {/* M8 Due Date Badge */}
+        <DueBadge dueDate={task.dueDate} status={task.status} />
       </div>
     </div>
   );

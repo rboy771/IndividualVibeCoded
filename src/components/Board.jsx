@@ -13,6 +13,7 @@ export default function Board({
   onAssigneeChange,
   onTaskClick,
   onEditTask,
+  onCopyPrompt,
 }) {
   return (
     <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -47,6 +48,7 @@ export default function Board({
                     onAssigneeChange={onAssigneeChange}
                     onCardClick={onTaskClick}
                     onEdit={onEditTask}
+                    onCopyPrompt={onCopyPrompt}
                   />
                 ))
               ) : (
