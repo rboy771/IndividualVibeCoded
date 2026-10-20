@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import Board from './components/Board';
 import TaskModal from './components/TaskModal';
+import AnchorBoard from './components/AnchorBoard';
 import { seedTasks } from './models/seedTasks';
+import { INITIAL_ANCHORS } from './models/anchors';
 
 /**
  * Vibecoding Project Tracker
@@ -29,6 +31,12 @@ import { seedTasks } from './models/seedTasks';
  * - Structured Markdown prompt serialization optimized for AI continuation
  * - Quick copy button on TaskCard & hero action on TaskModal
  * - Clipboard writing with fallback and visual feedback toast
+ *
+ * Milestone 11 (anchors):
+ * - 4-deliverable Anchor Board pinned above Kanban board (Presentation, Demo, Report, Documentation)
+ * - Distinct iconography and color accents per deliverable
+ * - Deliverable status tracking ('pending', 'in-progress', 'ready') with interactive editing modal
+ * - Clickable links with external navigation, copy-to-clipboard, and localStorage persistence
  */
 
 /**
@@ -87,6 +95,7 @@ export function useLocalStorage(key, initialValue) {
 
 export default function App() {
   const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', seedTasks);
+  const [anchors, setAnchors] = useLocalStorage('vibetracker.anchors', INITIAL_ANCHORS);
   const [editingTask, setEditingTask] = useState(null); // null = closed, {} = new task, task object = editing
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -120,6 +129,13 @@ export default function App() {
   const handleCopyPrompt = () => {
     // Microcopy from DESIGN.md: "Prompt context copied to clipboard. Ready to paste."
     setToastMessage('Prompt context copied to clipboard. Ready to paste.');
+  };
+
+  // Anchor update handler (M11)
+  const handleUpdateAnchor = (updatedAnchor) => {
+    setAnchors((prevAnchors) =>
+      prevAnchors.map((a) => (a.id === updatedAnchor.id ? updatedAnchor : a))
+    );
   };
 
   const handleOpenCreateModal = () => {
@@ -190,7 +206,12 @@ export default function App() {
           </div>
         </header>
 
-        {/* TODO M11 anchors: render Anchor Board here */}
+        {/* M11 Deliverable Anchor Board pinned above the Kanban board */}
+        <AnchorBoard
+          anchors={anchors}
+          onUpdateAnchor={handleUpdateAnchor}
+          onToast={setToastMessage}
+        />
 
         {/* M4 Kanban Board */}
         <main>
@@ -215,7 +236,7 @@ export default function App() {
           onCopyPrompt={handleCopyPrompt}
         />
 
-        {/* Handoff & Prompt Copy Toast Notification */}
+        {/* Handoff, Anchor & Prompt Copy Toast Notification */}
         {toastMessage && (
           <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-lg border border-brand-primary/40 bg-slate-900/95 px-4 py-3 text-xs font-medium text-slate-100 shadow-xl backdrop-blur transition-opacity duration-200">
             <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
