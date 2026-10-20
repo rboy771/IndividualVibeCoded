@@ -2,13 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root {
-  height: 100%;
+@layer base {
+  html, body, #root {
+    height: 100%;
+  }
+
+  body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #0F172A; /* surface-page (Slate 900) */
+    color: #F8FAFC;            /* text-primary (Slate 50) */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
-body {
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background-color: #f8fafc; /* slate-50 */
-  color: #0f172a;            /* slate-900 */
+@layer components {
+  /* Reusable component classes consistent with DESIGN.md */
+  .card {
+    background-color: #1E293B; /* surface-card */
+    border: 1px solid rgba(51, 65, 85, 0.6); /* slate-700 / 60 */
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+    transition: all 0.15s ease-in-out;
+  }
+
+  .card:hover {
+    border-color: rgba(71, 85, 105, 0.8);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  }
+
+  .btn-primary {
+    background-color: #6366F1; /* brand-primary */
+    color: #F8FAFC;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+
+  .btn-primary:hover {
+    background-color: #4F46E5; /* Indigo 600 */
+  }
+
+  .btn-primary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #0F172A, 0 0 0 4px #8B5CF6;
+  }
 }
