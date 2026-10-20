@@ -6,10 +6,14 @@ import { seedTasks } from './models/seedTasks';
 /**
  * Vibecoding Project Tracker
  *
- * Milestone 5 (crud-modal):
- * - Implemented TaskModal for full CRUD lifecycle and persistence
- * - Support creating, editing, and deleting tasks
- * - Integrated modal state and handlers with localStorage
+ * Milestone 6 (tag-style):
+ * - Refined emerald & rose badge pills with sparkle & bug icons
+ * - Card left-border accent stripe reflecting task type
+ *
+ * Milestone 7 (task-owner):
+ * - Distinctive colored initials avatar + name per teammate
+ * - Inline quick "Hand off to..." teammate dropdown on TaskCard
+ * - Full state update & localStorage persistence with smooth handoff feedback
  */
 
 /**
@@ -70,12 +74,31 @@ export default function App() {
   const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', seedTasks);
   const [editingTask, setEditingTask] = useState(null); // null = closed, {} = new task, task object = editing
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  // Auto-dismiss toast
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = setTimeout(() => {
+      setToastMessage('');
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
 
   // Quick move handler across stages
   const handleStatusChange = (taskId, newStatus) => {
     setTasks((prevTasks) =>
       prevTasks.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
     );
+  };
+
+  // Quick handoff handler across teammates (M7)
+  const handleAssigneeChange = (taskId, newAssignee) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => (t.id === taskId ? { ...t, assignee: newAssignee } : t))
+    );
+    // Microcopy from DESIGN.md: "Task handed off to {name}. Smooth sailing."
+    setToastMessage(`Task handed off to ${newAssignee}. Smooth sailing.`);
   };
 
   const handleOpenCreateModal = () => {
@@ -141,7 +164,7 @@ export default function App() {
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Add Task
+              + New Task
             </button>
           </div>
         </header>
@@ -154,6 +177,7 @@ export default function App() {
             stages={STAGES}
             tasks={tasks}
             onStatusChange={handleStatusChange}
+            onAssigneeChange={handleAssigneeChange}
             onTaskClick={handleOpenEditModal}
             onEditTask={handleOpenEditModal}
           />
@@ -167,6 +191,14 @@ export default function App() {
           onSave={handleSaveTask}
           onDelete={handleDeleteTask}
         />
+
+        {/* M7 Handoff Toast Notification */}
+        {toastMessage && (
+          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-lg border border-brand-primary/40 bg-slate-900/95 px-4 py-3 text-xs font-medium text-slate-100 shadow-xl backdrop-blur transition-opacity duration-200">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>{toastMessage}</span>
+          </div>
+        )}
       </div>
     </div>
   );
