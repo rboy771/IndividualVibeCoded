@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import Board from './components/Board';
+import TaskModal from './components/TaskModal';
 import { seedTasks } from './models/seedTasks';
 
 /**
  * Vibecoding Project Tracker
  *
- * Milestone 4 (data-model):
- * - Implemented 4-column responsive Kanban board view
- * - Seed tasks matching PRD data model loaded via useLocalStorage
- * - Quick status updates between stages
+ * Milestone 5 (crud-modal):
+ * - Implemented TaskModal for full CRUD lifecycle and persistence
+ * - Support creating, editing, and deleting tasks
+ * - Integrated modal state and handlers with localStorage
  */
 
 /**
@@ -67,6 +68,8 @@ export function useLocalStorage(key, initialValue) {
 
 export default function App() {
   const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', seedTasks);
+  const [editingTask, setEditingTask] = useState(null); // null = closed, {} = new task, task object = editing
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Quick move handler across stages
   const handleStatusChange = (taskId, newStatus) => {
@@ -75,10 +78,41 @@ export default function App() {
     );
   };
 
+  const handleOpenCreateModal = () => {
+    setEditingTask({});
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (task) => {
+    setEditingTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingTask(null);
+  };
+
+  const handleSaveTask = (taskData) => {
+    setTasks((prevTasks) => {
+      const exists = prevTasks.some((t) => t.id === taskData.id);
+      if (exists) {
+        return prevTasks.map((t) => (t.id === taskData.id ? taskData : t));
+      }
+      return [...prevTasks, taskData];
+    });
+    handleCloseModal();
+  };
+
+  const handleDeleteTask = (taskId) => {
+    setTasks((prevTasks) => prevTasks.filter((t) => t.id !== taskId));
+    handleCloseModal();
+  };
+
   return (
     <div className="min-h-screen bg-surface-page p-6 text-text-primary antialiased">
       <div className="mx-auto max-w-7xl">
-        <header className="mb-8 flex items-center justify-between border-b border-slate-800 pb-5">
+        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-800 pb-5">
           <div>
             <div className="flex items-center gap-3">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary/20 text-brand-primary border border-brand-primary/30">
@@ -95,10 +129,20 @@ export default function App() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <span className="text-xs font-mono text-text-muted">
               {tasks.length} total tasks
             </span>
+            <button
+              type="button"
+              onClick={handleOpenCreateModal}
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-3.5 py-2 text-xs font-semibold text-white shadow-lg shadow-brand-primary/25 transition-all hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 focus:ring-offset-slate-900"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Task
+            </button>
           </div>
         </header>
 
@@ -110,8 +154,19 @@ export default function App() {
             stages={STAGES}
             tasks={tasks}
             onStatusChange={handleStatusChange}
+            onTaskClick={handleOpenEditModal}
+            onEditTask={handleOpenEditModal}
           />
         </main>
+
+        {/* M5 CRUD TaskModal */}
+        <TaskModal
+          isOpen={isModalOpen}
+          task={editingTask}
+          onClose={handleCloseModal}
+          onSave={handleSaveTask}
+          onDelete={handleDeleteTask}
+        />
       </div>
     </div>
   );
