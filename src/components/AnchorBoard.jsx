@@ -5,24 +5,17 @@ import {
   formatAnchorUpdated,
   formatDisplayUrl,
 } from '../models/anchors';
+import { useFocusTrap } from '../utils/useFocusTrap';
 
 /**
  * AnchorBoard Component (Milestone 11)
  *
  * Pinned above the Kanban board, this component tracks the 4 primary project
- * deliverables required for hackathon submission:
- * 1. 📽️ Presentation (Slides URL)
- * 2. ⚡ Demo (Live App / Vercel URL)
- * 3. 📄 Report (PDF / Google Doc URL)
- * 4. 📚 Documentation (Readme / Architecture Doc URL)
- *
- * Each card displays:
- * - Deliverable title & category subtitle
- * - Distinctive theme colors & iconography
- * - Current deliverable status pill badge ('Pending', 'In Progress', 'Ready')
- * - Interactive clickable link (opens in new tab) or "+ Add link" prompt
- * - Last updated relative timestamp
- * - Edit trigger for updating the link, status, and notes
+ * deliverables required for hackathon submission with full WCAG 2.1 AA accessibility:
+ * - Semantic landmarks & progressbar ARIA
+ * - High contrast focus indicators
+ * - Trapped focus & Escape key in edit modal
+ * - Descriptive icon labels and colorblind indicators
  */
 export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
   const [editingAnchor, setEditingAnchor] = useState(null);
@@ -31,8 +24,12 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
   // Edit modal form state
   const [formUrl, setFormUrl] = useState('');
   const [formStatus, setFormStatus] = useState('pending');
-  const [formNotes, setFormNotes] = useState('');
   const [urlError, setUrlError] = useState('');
+
+  // Keyboard focus trapping for edit modal
+  const modalRef = useFocusTrap(Boolean(editingAnchor), {
+    initialFocusSelector: '#anchor-url',
+  });
 
   // Close modal on Escape key press
   useEffect(() => {
@@ -49,14 +46,13 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
   const readyCount = anchors.filter((a) => a.status === 'ready').length;
   const inProgressCount = anchors.filter((a) => a.status === 'in-progress').length;
   const totalCount = anchors.length;
-  const percentComplete = Math.round((readyCount / totalCount) * 100);
+  const percentComplete = totalCount > 0 ? Math.round((readyCount / totalCount) * 100) : 0;
 
   const handleOpenEdit = (anchor, e) => {
     if (e) e.stopPropagation();
     setEditingAnchor(anchor);
     setFormUrl(anchor.url || '');
     setFormStatus(anchor.status || 'pending');
-    setFormNotes(anchor.notes || '');
     setUrlError('');
   };
 
@@ -86,7 +82,6 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
       ...editingAnchor,
       url: cleanUrl,
       status: formStatus,
-      notes: formNotes.trim(),
       lastUpdated: new Date().toISOString(),
     };
 
@@ -128,34 +123,51 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
   };
 
   return (
-    <section aria-labelledby="anchor-board-title" className="mb-8">
+    <section
+      role="region"
+      aria-labelledby="anchor-board-title"
+      className="mb-8"
+    >
       {/* Anchor Section Header & Progress Metric */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-0.5">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-accent/20 text-brand-accent border border-brand-accent/30 text-xs">
+          <span
+            className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-accent/20 text-brand-accent border border-brand-accent/30 text-xs"
+            aria-hidden="true"
+          >
             ⚓
           </span>
           <h2 id="anchor-board-title" className="text-sm font-semibold tracking-wide uppercase text-slate-200">
-            Project Deliverables
+            Deliverables Anchor Board
           </h2>
-          <span className="rounded-full bg-slate-800/80 px-2 py-0.5 text-[11px] font-mono text-slate-400 border border-slate-700/60">
+          <span
+            className="rounded-full bg-slate-800/80 px-2 py-0.5 text-[11px] font-mono text-slate-300 border border-slate-700/60"
+            aria-label={`${readyCount} of ${totalCount} deliverables ready`}
+          >
             {readyCount}/{totalCount} Ready
           </span>
         </div>
 
         {/* Deliverable Readiness Bar */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5 text-xs text-text-muted">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400">
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
             <span>{readyCount} Ready</span>
-            <span className="text-slate-600">·</span>
-            <span className="inline-block h-2 w-2 rounded-full bg-amber-400" />
+            <span className="text-slate-600" aria-hidden="true">·</span>
+            <span className="inline-block h-2 w-2 rounded-full bg-amber-400" aria-hidden="true" />
             <span>{inProgressCount} In Progress</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div
+            className="flex items-center gap-2"
+            role="progressbar"
+            aria-valuenow={percentComplete}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Deliverables readiness progress"
+          >
             <div className="h-2 w-28 sm:w-36 overflow-hidden rounded-full bg-slate-800 border border-slate-700/50">
               <div
-                className="h-full bg-gradient-to-r from-brand-primary via-indigo-400 to-emerald-400 transition-all duration-500 ease-out"
+                className="h-full bg-gradient-to-r from-brand-primary via-indigo-400 to-emerald-400 transition-all duration-500 ease-out motion-reduce:transition-none"
                 style={{ width: `${percentComplete}%` }}
               />
             </div>
@@ -176,7 +188,7 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
             <div
               key={anchor.id}
               onClick={(e) => handleOpenEdit(anchor, e)}
-              className={`group relative flex flex-col justify-between rounded-xl border bg-gradient-to-b ${config.bgGradient} p-4 transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${config.borderClass} ${config.glowClass} shadow-card`}
+              className={`group relative flex flex-col justify-between rounded-xl border bg-gradient-to-b ${config.bgGradient} p-4 transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${config.borderClass} ${config.glowClass} shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 motion-reduce:transition-none motion-reduce:hover:transform-none`}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
@@ -185,7 +197,7 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                   handleOpenEdit(anchor, e);
                 }
               }}
-              aria-label={`Edit ${anchor.label} deliverable`}
+              aria-label={`Edit ${anchor.label} deliverable. Status: ${anchor.status}. ${anchor.url ? `URL: ${anchor.url}` : 'No URL provided'}`}
             >
               {/* Card Header: Icon, Label, and Status Pill Badge */}
               <div>
@@ -193,6 +205,7 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                   <div className="flex items-center gap-2.5">
                     <span
                       className={`flex h-9 w-9 items-center justify-center rounded-lg border text-lg ${config.iconBg}`}
+                      aria-hidden="true"
                     >
                       {config.icon}
                     </span>
@@ -213,17 +226,19 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                         ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
                         : anchor.status === 'in-progress'
                         ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                        : 'bg-slate-700/40 text-slate-400 border-slate-600/40'
+                        : 'bg-slate-700/40 text-slate-300 border-slate-600/40'
                     }`}
+                    aria-label={`Status: ${anchor.status === 'ready' ? 'Ready' : anchor.status === 'in-progress' ? 'In Progress' : 'Pending'}`}
                   >
                     <span
                       className={`h-1.5 w-1.5 rounded-full ${
                         anchor.status === 'ready'
-                          ? 'bg-emerald-400 animate-pulse'
+                          ? 'bg-emerald-400 animate-pulse motion-reduce:animate-none'
                           : anchor.status === 'in-progress'
                           ? 'bg-amber-400'
-                          : 'bg-slate-500'
+                          : 'bg-slate-400'
                       }`}
+                      aria-hidden="true"
                     />
                     {anchor.status === 'ready'
                       ? 'Ready'
@@ -233,12 +248,7 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                   </span>
                 </div>
 
-                {/* Optional Note / Summary */}
-                {anchor.notes && (
-                  <p className="mt-2 text-xs text-slate-400 line-clamp-1 italic">
-                    "{anchor.notes}"
-                  </p>
-                )}
+
               </div>
 
               {/* Card Middle: URL Section */}
@@ -250,14 +260,17 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="group/link flex items-center gap-1.5 text-xs font-mono text-indigo-400 hover:text-indigo-300 transition-colors truncate max-w-[80%]"
+                      onKeyDown={(e) => e.stopPropagation()}
+                      className="group/link flex items-center gap-1.5 text-xs font-mono text-indigo-400 hover:text-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded transition-colors truncate max-w-[80%]"
                       title={anchor.url}
+                      aria-label={`Open ${anchor.label} URL in new tab: ${anchor.url}`}
                     >
                       <svg
                         className="h-3.5 w-3.5 shrink-0 opacity-70 group-hover/link:opacity-100"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
+                        aria-hidden="true"
                       >
                         <path
                           strokeLinecap="round"
@@ -275,15 +288,17 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                     <button
                       type="button"
                       onClick={(e) => handleCopyLink(anchor, e)}
-                      className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors"
-                      title="Copy URL"
+                      onKeyDown={(e) => e.stopPropagation()}
+                      className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 transition-colors"
+                      title={`Copy ${anchor.label} URL`}
+                      aria-label={`Copy ${anchor.label} URL to clipboard`}
                     >
                       {isCopied ? (
-                        <svg className="h-3.5 w-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="h-3.5 w-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       ) : (
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
                       )}
@@ -293,9 +308,11 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                   <button
                     type="button"
                     onClick={(e) => handleOpenEdit(anchor, e)}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-700/80 bg-slate-800/40 py-1.5 text-xs font-medium text-slate-400 transition-all hover:border-slate-500 hover:bg-slate-800 hover:text-slate-200"
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-700/80 bg-slate-800/40 py-1.5 text-xs font-medium text-slate-300 transition-all hover:border-slate-500 hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+                    aria-label={`Add link for ${anchor.label} deliverable`}
                   >
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                     <span>Add deliverable URL</span>
@@ -304,14 +321,16 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
               </div>
 
               {/* Card Footer: Last Updated & Edit Button */}
-              <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500">
+              <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400">
                 <span className="font-mono">
                   {formatAnchorUpdated(anchor.lastUpdated)}
                 </span>
                 <button
                   type="button"
                   onClick={(e) => handleOpenEdit(anchor, e)}
-                  className="rounded px-1.5 py-0.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors"
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="rounded px-1.5 py-0.5 text-slate-300 hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 transition-colors"
+                  aria-label={`Edit ${anchor.label} deliverable details`}
                 >
                   Edit ✎
                 </button>
@@ -331,6 +350,7 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
           onClick={handleCloseEdit}
         >
           <div
+            ref={modalRef}
             className="w-full max-w-lg rounded-2xl border border-slate-700 bg-surface-card p-6 shadow-2xl transition-all"
             onClick={(e) => e.stopPropagation()}
           >
@@ -341,6 +361,7 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                   className={`flex h-10 w-10 items-center justify-center rounded-xl border text-xl ${
                     ANCHOR_CONFIG[editingAnchor.id]?.iconBg || 'bg-slate-800'
                   }`}
+                  aria-hidden="true"
                 >
                   {ANCHOR_CONFIG[editingAnchor.id]?.icon || '⚓'}
                 </span>
@@ -348,7 +369,7 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                   <h3 id="anchor-modal-title" className="text-lg font-bold text-white">
                     Edit {editingAnchor.label}
                   </h3>
-                  <p className="text-xs text-text-muted">
+                  <p className="text-xs text-slate-400">
                     {ANCHOR_CONFIG[editingAnchor.id]?.subtitle} · Final Hackathon Deliverable
                   </p>
                 </div>
@@ -356,10 +377,10 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
               <button
                 type="button"
                 onClick={handleCloseEdit}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
-                aria-label="Close dialog"
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 transition-colors"
+                aria-label="Close edit deliverable dialog"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -385,7 +406,9 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                       if (urlError) setUrlError('');
                     }}
                     placeholder={ANCHOR_CONFIG[editingAnchor.id]?.placeholder || 'https://...'}
-                    className={`w-full rounded-lg border bg-slate-900 px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 font-mono transition-colors focus:outline-none focus:ring-2 focus:ring-brand-primary ${
+                    aria-invalid={Boolean(urlError)}
+                    aria-describedby={urlError ? 'anchor-url-error' : 'anchor-url-help'}
+                    className={`w-full rounded-lg border bg-slate-900 px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-400 font-mono transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                       urlError ? 'border-red-500' : 'border-slate-700'
                     }`}
                   />
@@ -393,17 +416,18 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                     <button
                       type="button"
                       onClick={() => setFormUrl('')}
-                      className="absolute right-2.5 top-2.5 text-slate-500 hover:text-slate-300 text-xs"
+                      className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-200 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
                       title="Clear URL"
+                      aria-label="Clear URL field"
                     >
                       ✕
                     </button>
                   )}
                 </div>
                 {urlError ? (
-                  <p className="mt-1 text-xs text-red-400">{urlError}</p>
+                  <p id="anchor-url-error" className="mt-1 text-xs text-red-400" role="alert">{urlError}</p>
                 ) : (
-                  <p className="mt-1 text-[11px] text-slate-500">
+                  <p id="anchor-url-help" className="mt-1 text-[11px] text-slate-400">
                     Paste the published link (Google Slides, Vercel app, Doc, or GitHub Readme).
                   </p>
                 )}
@@ -414,22 +438,28 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
                   Deliverable Status
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div
+                  role="radiogroup"
+                  aria-label="Deliverable Status"
+                  className="grid grid-cols-3 gap-2"
+                >
                   {ANCHOR_STATUSES.map((status) => {
                     const isSelected = formStatus === status.id;
                     return (
                       <button
                         key={status.id}
                         type="button"
+                        role="radio"
+                        aria-checked={isSelected}
                         onClick={() => setFormStatus(status.id)}
-                        className={`flex items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-medium transition-all ${
+                        className={`flex items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                           isSelected
                             ? status.id === 'ready'
                               ? 'border-emerald-500/60 bg-emerald-500/20 text-emerald-300 font-semibold shadow-sm'
                               : status.id === 'in-progress'
                               ? 'border-amber-500/60 bg-amber-500/20 text-amber-300 font-semibold shadow-sm'
                               : 'border-slate-500/60 bg-slate-700/60 text-slate-200 font-semibold shadow-sm'
-                            : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700 hover:bg-slate-800'
+                            : 'border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700 hover:bg-slate-800 hover:text-white'
                         }`}
                       >
                         <span
@@ -438,8 +468,9 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                               ? 'bg-emerald-400'
                               : status.id === 'in-progress'
                               ? 'bg-amber-400'
-                              : 'bg-slate-500'
+                              : 'bg-slate-400'
                           }`}
+                          aria-hidden="true"
                         />
                         {status.label}
                       </button>
@@ -448,38 +479,22 @@ export default function AnchorBoard({ anchors, onUpdateAnchor, onToast }) {
                 </div>
               </div>
 
-              {/* Notes / Context */}
-              <div>
-                <label
-                  htmlFor="anchor-notes"
-                  className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5"
-                >
-                  Deliverable Notes (Optional)
-                </label>
-                <textarea
-                  id="anchor-notes"
-                  rows={2}
-                  value={formNotes}
-                  onChange={(e) => setFormNotes(e.target.value)}
-                  placeholder="Notes, version tags, or presentation tips for the team..."
-                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                />
-              </div>
+
 
               {/* Modal Actions */}
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={handleCloseEdit}
-                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                  className="rounded-lg border border-slate-700 bg-slate-800/80 px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-brand-primary px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-brand-primary/25 hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-brand-primary transition-all"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-brand-primary px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-brand-primary/25 hover:bg-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 transition-all"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   Save Deliverable

@@ -1,11 +1,11 @@
 /**
- * Anchor Model & Deliverable Specifications (Milestone 11)
+ * Anchor Model & Deliverable Specifications (Milestone 11: project-deliverables)
  *
  * Defines the 4 final project deliverables pinned above the Kanban board:
- * 1. Presentation (Slides URL, status, lastUpdated)
- * 2. Demo (Live App / Vercel URL, status, lastUpdated)
- * 3. Report (PDF / Google Doc URL, status, lastUpdated)
- * 4. Documentation (Readme / Architecture Doc URL, status, lastUpdated)
+ * 1. Presentation (Slides URL, status)
+ * 2. Demo (Live App URL, status)
+ * 3. Report (PDF / Doc URL, status)
+ * 4. Documentation (Readme URL, status)
  */
 
 /**
@@ -18,7 +18,6 @@
  * @property {string} icon
  * @property {string} url
  * @property {AnchorStatus} status
- * @property {string} [notes]
  * @property {string | null} lastUpdated ISO timestamp
  */
 
@@ -50,7 +49,7 @@ export const ANCHOR_CONFIG = {
     label: 'Demo',
     subtitle: 'Live App Deployment',
     icon: '⚡',
-    placeholder: 'https://vibetracker.vercel.app',
+    placeholder: 'https://your-app.vercel.app',
     accentColor: 'emerald',
     borderClass: 'border-emerald-500/30 hover:border-emerald-500/60',
     bgGradient: 'from-emerald-950/30 via-slate-900/60 to-slate-900',
@@ -76,18 +75,18 @@ export const ANCHOR_CONFIG = {
     label: 'Documentation',
     subtitle: 'Architecture & Readme',
     icon: '📚',
-    placeholder: 'https://github.com/org/repo#readme',
-    accentColor: 'sky',
-    borderClass: 'border-sky-500/30 hover:border-sky-500/60',
-    bgGradient: 'from-sky-950/30 via-slate-900/60 to-slate-900',
-    iconBg: 'bg-sky-500/15 border-sky-500/30 text-sky-300',
-    badgeClass: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
-    glowClass: 'hover:shadow-[0_0_25px_rgba(14,165,233,0.18)]',
+    placeholder: 'https://github.com/user/repo#readme',
+    accentColor: 'cyan',
+    borderClass: 'border-cyan-500/30 hover:border-cyan-500/60',
+    bgGradient: 'from-cyan-950/30 via-slate-900/60 to-slate-900',
+    iconBg: 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300',
+    badgeClass: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+    glowClass: 'hover:shadow-[0_0_25px_rgba(6,182,212,0.18)]',
   },
 };
 
 /**
- * Initial 4 anchors seed data
+ * Clean slate initial 4 anchors
  */
 export const INITIAL_ANCHORS = [
   {
@@ -96,9 +95,8 @@ export const INITIAL_ANCHORS = [
     category: 'Slides & Pitch Deck',
     icon: '📽️',
     url: '',
-    status: 'in-progress',
-    notes: 'Final pitch deck covering problem, solution, AI prompt logs, and demo.',
-    lastUpdated: '2026-10-20T10:15:00.000Z',
+    status: 'pending',
+    lastUpdated: null,
   },
   {
     id: 'demo',
@@ -107,8 +105,7 @@ export const INITIAL_ANCHORS = [
     icon: '⚡',
     url: 'https://vibetracker.vercel.app',
     status: 'ready',
-    notes: 'Production Vercel deployment for live hackathon demonstration.',
-    lastUpdated: '2026-10-20T12:30:00.000Z',
+    lastUpdated: new Date().toISOString(),
   },
   {
     id: 'report',
@@ -117,7 +114,6 @@ export const INITIAL_ANCHORS = [
     icon: '📄',
     url: '',
     status: 'pending',
-    notes: 'Module 5 final project report detailing architecture and team retrospectives.',
     lastUpdated: null,
   },
   {
@@ -125,61 +121,87 @@ export const INITIAL_ANCHORS = [
     label: 'Documentation',
     category: 'Architecture & Readme',
     icon: '📚',
-    url: 'https://github.com/c24034652/Individualhackathon#readme',
+    url: 'https://github.com/rboy771/IndividualVibeCoded#readme',
     status: 'ready',
-    notes: 'Comprehensive README, milestone specs, and design system documentation.',
-    lastUpdated: '2026-10-20T13:45:00.000Z',
+    lastUpdated: new Date().toISOString(),
   },
 ];
 
 /**
- * Format relative time from an ISO timestamp
- * @param {string | null} isoString
- * @returns {string}
+ * Returns clean demo anchors
  */
+export function getDemoAnchors() {
+  return [
+    {
+      id: 'presentation',
+      label: 'Presentation',
+      category: 'Slides & Pitch Deck',
+      icon: '📽️',
+      url: '',
+      status: 'pending',
+      lastUpdated: null,
+    },
+    {
+      id: 'demo',
+      label: 'Demo',
+      category: 'Live App Deployment',
+      icon: '⚡',
+      url: 'https://vibetracker.vercel.app',
+      status: 'ready',
+      lastUpdated: new Date().toISOString(),
+    },
+    {
+      id: 'report',
+      label: 'Report',
+      category: 'Project Write-up & PDF',
+      icon: '📄',
+      url: '',
+      status: 'pending',
+      lastUpdated: null,
+    },
+    {
+      id: 'documentation',
+      label: 'Documentation',
+      category: 'Architecture & Readme',
+      icon: '📚',
+      url: 'https://github.com/rboy771/IndividualVibeCoded#readme',
+      status: 'ready',
+      lastUpdated: new Date().toISOString(),
+    },
+  ];
+}
+
 export function formatAnchorUpdated(isoString) {
   if (!isoString) return 'Not yet updated';
-
   try {
-    const updated = new Date(isoString);
-    if (isNaN(updated.getTime())) return 'Not yet updated';
-
-    const now = new Date();
-    const diffMs = now - updated;
+    const diffMs = Date.now() - new Date(isoString).getTime();
     const diffSec = Math.floor(diffMs / 1000);
     const diffMin = Math.floor(diffSec / 60);
-    const diffHours = Math.floor(diffMin / 60);
-    const diffDays = Math.floor(diffHours / 24);
+    const diffHr = Math.floor(diffMin / 60);
 
     if (diffMin < 1) return 'Updated just now';
     if (diffMin < 60) return `Updated ${diffMin}m ago`;
-    if (diffHours < 24) return `Updated ${diffHours}h ago`;
-    if (diffDays === 1) return 'Updated yesterday';
-    if (diffDays < 7) return `Updated ${diffDays}d ago`;
-
-    return `Updated ${updated.toLocaleDateString(undefined, {
+    if (diffHr < 24) return `Updated ${diffHr}h ago`;
+    return new Date(isoString).toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
-    })}`;
+    });
   } catch {
-    return 'Not yet updated';
+    return 'Recently updated';
   }
 }
 
-/**
- * Format a URL for concise display
- * @param {string} url
- * @returns {string}
- */
-export function formatDisplayUrl(url) {
-  if (!url) return '';
+export function formatDisplayUrl(rawUrl) {
+  if (!rawUrl) return '';
   try {
-    const parsed = new URL(url.startsWith('http') ? url : `https://${url}`);
-    const host = parsed.hostname.replace(/^www\./, '');
-    const pathname = parsed.pathname === '/' ? '' : parsed.pathname;
-    const full = `${host}${pathname}`;
-    return full.length > 28 ? `${full.slice(0, 26)}…` : full;
+    const urlObj = new URL(rawUrl);
+    let display = urlObj.hostname.replace(/^www\./, '') + urlObj.pathname;
+    if (display.endsWith('/')) display = display.slice(0, -1);
+    if (display.length > 28) {
+      display = display.slice(0, 25) + '...';
+    }
+    return display;
   } catch {
-    return url.length > 28 ? `${url.slice(0, 26)}…` : url;
+    return rawUrl.length > 28 ? rawUrl.slice(0, 25) + '...' : rawUrl;
   }
 }
