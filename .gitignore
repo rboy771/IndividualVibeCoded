@@ -7,3 +7,10 @@ dist
 .idea
 .vscode
 *.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+backend/.venv/
