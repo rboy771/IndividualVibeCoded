@@ -138,7 +138,7 @@ Where AI did **not** save time (manual human judgment):
 
 - **Team name:** VibeCraft Studio / Team VibeTracker
 - **Tagline (one sentence):** A prompt-native Kanban and deliverable anchor workspace built for high-velocity vibecoding teams.
-- **Tracker URL after deploy:** `https://vibetracker.vercel.app`
+- **Tracker URL after deploy:** `https://individual-vibe-coded.vercel.app`
 
 ## 12. Out of scope (do not build)
 
