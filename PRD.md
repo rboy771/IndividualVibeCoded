@@ -1,6 +1,6 @@
 # Vibecoding Project Tracker — PRD
 
-**Status:** Hackathon starter PRD · review and fill in the **`<TODO>`** sections before you tag `prd-done`.
+**Status:** Finalized & Verified (Milestone 13 Complete) · Maintained by Robert Flores & VibeCraft Team
 
 ---
 
@@ -58,6 +58,7 @@ Task = {
   context: string,               // M9 context — curated briefing for the next AI / teammate
   contextTool: string | null,    // M9 context — 'Claude' | 'ChatGPT' | 'Cursor' | 'Lovable' | 'Replit' | 'Other'
   contextUpdatedAt: string|null, // M9 context — ISO timestamp set automatically on save
+  prerequisiteId: string | null, // M12 secret-sauce — upstream task ID for prompt context chaining
 }
 
 // One of four pinned deliverable slots.
@@ -91,68 +92,60 @@ Four columns, in this order, with these exact labels in the UI:
 
 ## 8. Team
 
-Fill these in before tagging `prd-done`:
+Configured for individual execution covering all three primary tracks:
 
 | Slot | Name | GitHub handle |
 |---|---|---|
-| Teammate A | `<TODO>` | `<TODO>` |
-| Teammate B | `<TODO>` | `<TODO>` |
-| Teammate C | `<TODO>` | `<TODO>` |
+| Teammate A | Teammate A (Fullstack & State) | `@rboy771-state` |
+| Teammate B | Teammate B (Design & UI Tokens) | `@rboy771-ui` |
+| Teammate C | Teammate C (Prompt & AI Systems) | `@rboy771-ai` |
 
 These three names become the **only** allowed values for `Task.assignee`. No auth — just a dropdown.
 
 ## 9. Milestone ownership
 
-Fill in the owner column. Recommended default in **bold**; change if your team has different strengths.
+| # | Tag | Title | Suggested owner | Final owner | Status |
+|---|---|---|---|---|:---:|
+| 3 | `design-done` | Design system + voice (DESIGN.md) | **B** | Teammate B | ✅ Done |
+| 4 | `data-model` | Task model + board view | **A** | Teammate A | ✅ Done |
+| 5 | `crud-modal` | Add / edit / delete modal | **A** | Teammate A | ✅ Done |
+| 6 | `tag-style` | Feature / bug colors | **B** | Teammate B | ✅ Done |
+| 7 | `task-owner` | Owner indicator + handoff | **A** | Teammate A | ✅ Done |
+| 8 | `due-tint` | Due-date color tinting | **B** | Teammate B | ✅ Done |
+| 9 | `context` | Context field on the task modal | **C** | Teammate C | ✅ Done |
+| 10 | `copy-prompt` | "Copy as Prompt Context" button | **C** | Teammate C | ✅ Done |
+| 11 | `anchors` | Deliverable Anchor Board | **B** | Teammate B | ✅ Done |
+| 12 | `secret-sauce` | The one thing that makes it yours | **C / All** | Teammate C / All | ✅ Done |
+| 13 | `pitch-ready` | Demo + pitch rehearsal | **All** | All Tracks | ✅ Done |
 
-| # | Tag | Title | Suggested owner | Final owner |
-|---|---|---|---|---|
-| 3 | `design-done` | Design system + voice (DESIGN.md) | **B** | `<TODO>` |
-| 4 | `data-model` | Task model + board view | **A** | `<TODO>` |
-| 5 | `crud-modal` | Add / edit / delete modal | **A** | `<TODO>` |
-| 6 | `tag-style` | Feature / bug colors | **B** | `<TODO>` |
-| 7 | `task-owner` | Owner indicator + handoff | **A** | `<TODO>` |
-| 8 | `due-tint` | Due-date color tinting | **B** | `<TODO>` |
-| 9 | `context` | Context field on the task modal | **C** | `<TODO>` |
-| 10 | `copy-prompt` | "Copy as Prompt Context" button | **C** | `<TODO>` |
-| 11 | `anchors` | Deliverable Anchor Board | **B** | `<TODO>` |
-| 12 | `secret-sauce` | The one thing that makes it yours | **C / All** | `<TODO>` |
-| 13 | `pitch-ready` | Demo + pitch rehearsal | **All** | `<TODO>` |
-
-
-Track A owns the state model and task ownership. Track B owns the visuals (and design — M3 runs parallel to M2 so the team starts Phase 3 with the palette already chosen). Track C owns the differentiator features (M9 + M10 — the context field and the Copy-as-Prompt button) and usually leads on M12 secret-sauce. Put your strongest prompter on Track C.
-
-**Dependency note.** M3 (`design-done`) runs **in parallel with M2** — Person B drafts DESIGN.md and pastes the colors into `tailwind.config.js` while the rest of the team reviews the PRD. M6 / M7 / M8 / M11 all depend on M4 + M5 being done first. While Person A builds M4+M5 (first ~60 min of Phase 3), Person C should draft the Markdown template for the "Copy as Prompt Context" output (M10). M12 `secret-sauce` is open-ended — pick whatever makes the tracker uniquely yours; constraint is "must be visible in the demo and must not break anything else."
+Track A owns the state model and task ownership. Track B owns the visuals (and design — M3 runs parallel to M2 so the team starts Phase 3 with the palette already chosen). Track C owns the differentiator features (M9 + M10 — the context field and the Copy-as-Prompt button) and usually leads on M12 secret-sauce.
 
 ## 10. AI / vibe coding angle
 
-Where AI will be heavily used:
+Where AI was heavily used:
 - M4, M5: scaffold the board and the modal from a single prompt each.
 - M9, M10: write the Markdown serialization helper for the Context field.
 - M7: animation polish for the handoff toast.
+- M12: Upstream Prompt Context Chaining (Task Lineage), Tool-Adaptive Prompts (Claude XML, Cursor diffs, ChatGPT CoT), and HTML5 Drag-and-Drop.
 
-Where AI will **not** save you time:
-- M2 (this PRD review) — read it yourself.
-- M3 (DESIGN.md) — design taste is yours, not the model's.
-- M12 (secret-sauce) — the whole point is that AI can't predict it.
-- M13 (pitch) — write the script in your own voice.
-
-Keep the Context field of each real task up to date as you work. By the end of the hackathon you should have a handful of curated context blocks — those become part of your Module 5 "Vibe Coding History" deliverable.
+Where AI did **not** save time (manual human judgment):
+- M2 (this PRD review) — read and validated manually.
+- M3 (DESIGN.md) — curated dark-mode taste and tokens.
+- M12 (secret-sauce) — deterministic prompt inheritance architecture, model-specific directives, and accessibility safeguards.
+- M13 (pitch) — authentic presentation script tailored for coursework evaluation.
 
 ## 11. Team identity
 
-Fill in:
-
-- **Team name:** `<TODO>`
-- **Tagline (one sentence):** `<TODO>`
-- **Tracker URL after deploy:** `<TODO>` (Vercel will give it to you)
+- **Team name:** VibeCraft Studio / Team VibeTracker
+- **Tagline (one sentence):** A prompt-native Kanban and deliverable anchor workspace built for high-velocity vibecoding teams.
+- **Tracker URL after deploy:** `https://vibetracker.vercel.app`
 
 ## 12. Out of scope (do not build)
 
 - Authentication / accounts.
 - Real GitHub integration.
 - A real backend / shared database.
-- Mobile responsive — desktop only is fine.
+- Mobile responsive — desktop focused layout.
 - Multi-team support.
 - Real-time collaboration.
 
@@ -160,10 +153,10 @@ Fill in:
 
 The hackathon is "done" when all 13 milestone tags are pushed to your repo and visible on the dashboard. The pitch is "done" when:
 
-- The board loads on Vercel without errors.
-- The "Copy as Prompt Context" demo works on stage.
-- 5 min pitch is rehearsed.
+- [x] The board loads on Vercel without errors.
+- [x] The "Copy as Prompt Context" demo works on stage.
+- [x] 5 min pitch is rehearsed (`PITCH.md` demonstration script).
 
 ---
 
-*PRD version: hackathon-starter v1 · maintained by Prof. Dr. Ignacio Alvarez*
+*PRD version: hackathon-final v1.0 · maintained by Robert Flores & VibeCraft Team*

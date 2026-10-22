@@ -1,98 +1,75 @@
 /**
- * Initial seed tasks for the Vibecoding Project Tracker.
- * Adheres to PRD Section 5 Task schema:
- * {
- *   id: string,
- *   title: string,
- *   description: string,
- *   type: 'feature' | 'bug',
- *   status: 'todo' | 'in-progress' | 'review' | 'done',
- *   assignee: string,
- *   dueDate: string | null,
- *   createdDate: string,
- *   context: string,
- *   contextTool: string | null,
- *   contextUpdatedAt: string | null,
- * }
+ * Initial Seed Tasks (Milestone 4: data-model)
+ * Pre-populates 4 clean mock tasks representing the core sprint with prerequisite lineage.
  */
 
-export const seedTasks = [
-  {
-    id: 'task-1',
-    title: 'Scaffold Tailwind palette & design tokens',
-    description: 'Configure brand colors, slate dark surfaces, and custom task badges in tailwind.config.js according to DESIGN.md.',
-    type: 'feature',
-    status: 'done',
-    assignee: 'Teammate B',
-    dueDate: '2026-10-18',
-    createdDate: '2026-10-15',
-    context: 'Initial setup of Tailwind CSS theme extensions matching the Linear/Raycast dark theme aesthetic.',
-    contextTool: 'Claude',
-    contextUpdatedAt: '2026-10-18T16:30:00Z',
-  },
-  {
-    id: 'task-2',
-    title: 'Implement 4-column Kanban board view',
-    description: 'Create responsive column layout mapping to STAGES (todo, in-progress, review, done) with clean card presentation.',
-    type: 'feature',
-    status: 'in-progress',
-    assignee: 'Teammate A',
-    dueDate: '2026-10-21',
-    createdDate: '2026-10-19',
-    context: 'Milestone 4 implementation for board layout and task cards loaded from localStorage with initial seeds.',
-    contextTool: 'Cursor',
-    contextUpdatedAt: '2026-10-20T10:15:00Z',
-  },
-  {
-    id: 'task-3',
-    title: 'Fix card status dropdown keyboard trap',
-    description: 'Ensure tab navigation and arrow keys work cleanly when moving cards between columns on low-resolution viewports.',
-    type: 'bug',
-    status: 'todo',
-    assignee: 'Teammate A',
-    dueDate: '2026-10-22',
-    createdDate: '2026-10-20',
-    context: 'Investigate focus ring and keydown handler behavior in TaskCard dropdown menu.',
-    contextTool: null,
-    contextUpdatedAt: null,
-  },
-  {
-    id: 'task-4',
-    title: 'Design prompt serialization helper',
-    description: 'Format task briefing, assignee, history, and context into a clean markdown block for one-click AI continuation.',
-    type: 'feature',
-    status: 'todo',
-    assignee: 'Teammate C',
-    dueDate: '2026-10-24',
-    createdDate: '2026-10-20',
-    context: 'Prepare template specification for Milestone 10 (Copy as Prompt Context).',
-    contextTool: 'ChatGPT',
-    contextUpdatedAt: '2026-10-20T12:00:00Z',
-  },
-  {
-    id: 'task-5',
-    title: 'Hook up due-tint mathematical logic',
-    description: 'Compute relative difference between current date and dueDate to apply safe, warning, overdue, or neutral tints.',
-    type: 'feature',
-    status: 'review',
-    assignee: 'Teammate B',
-    dueDate: '2026-10-20',
-    createdDate: '2026-10-19',
-    context: 'Verify border-due-warning and border-due-overdue thresholds with date-fns or native Date diff.',
-    contextTool: 'Claude',
-    contextUpdatedAt: '2026-10-20T11:45:00Z',
-  },
-  {
-    id: 'task-6',
-    title: 'Resolve missing deliverable URL validation',
-    description: 'Anchor board deliverable links fail when users enter URLs without https:// protocol prefix.',
-    type: 'bug',
-    status: 'review',
-    assignee: 'Teammate B',
-    dueDate: '2026-10-23',
-    createdDate: '2026-10-20',
-    context: 'Add URL sanitization helper regex before saving anchor slots.',
-    contextTool: 'Lovable',
-    contextUpdatedAt: '2026-10-20T13:00:00Z',
-  },
-];
+function getRelativeIsoDate(daysOffset) {
+  const target = new Date();
+  target.setDate(target.getDate() + daysOffset);
+  return target.toISOString().split('T')[0];
+}
+
+export function generateSeedTasks() {
+  const now = new Date();
+
+  return [
+    {
+      id: 'task-1',
+      title: 'Scaffold Tailwind design tokens and dark workspace',
+      description: 'Configure slate background surfaces, indigo brand colors, and accessible text contrast in tailwind.config.js.',
+      type: 'feature',
+      status: 'done',
+      assignee: 'Teammate B',
+      dueDate: getRelativeIsoDate(-4),
+      createdDate: getRelativeIsoDate(-7),
+      context: 'Configured dark theme tokens in tailwind.config.js and verified WCAG 2.1 AA text contrast ratio >= 4.5:1.',
+      contextTool: 'Claude',
+      contextUpdatedAt: new Date(now.getTime() - 3600000 * 48).toISOString(),
+      prerequisiteId: null,
+    },
+    {
+      id: 'task-2',
+      title: 'Build Deliverable Anchor Board banner',
+      description: 'Create pinned top header tracking Presentation, Demo, Report, and Documentation deliverables with real-time status indicators.',
+      type: 'feature',
+      status: 'done',
+      assignee: 'Teammate A',
+      dueDate: getRelativeIsoDate(-2),
+      createdDate: getRelativeIsoDate(-5),
+      context: 'Built AnchorBoard.jsx with responsive layout, URL input modal, and localStorage persistence.',
+      contextTool: 'Cursor',
+      contextUpdatedAt: new Date(now.getTime() - 3600000 * 24).toISOString(),
+      prerequisiteId: null,
+    },
+    {
+      id: 'task-3',
+      title: 'Implement prompt briefing context and 1-click clipboard copy',
+      description: 'Store Markdown instructions and target LLM tool on each task, serializing to clipboard on click.',
+      type: 'feature',
+      status: 'in-progress',
+      assignee: 'Teammate C',
+      dueDate: getRelativeIsoDate(1),
+      createdDate: getRelativeIsoDate(-2),
+      context: 'Added contextHelper.js with Markdown prompt serializer and clipboard fallback for cross-origin environments.',
+      contextTool: 'ChatGPT',
+      contextUpdatedAt: new Date(now.getTime() - 3600000 * 3).toISOString(),
+      prerequisiteId: 'task-1',
+    },
+    {
+      id: 'task-4',
+      title: 'Test relative due-date border urgency tinting',
+      description: 'Verify overdue tasks display crimson borders, upcoming tasks show warning amber, and completed tasks remain neutral.',
+      type: 'bug',
+      status: 'todo',
+      assignee: 'Teammate A',
+      dueDate: getRelativeIsoDate(3),
+      createdDate: getRelativeIsoDate(-1),
+      context: 'Audited dueTint.js boundary calculations against local midnight and verified high-contrast focus rings.',
+      contextTool: 'Claude',
+      contextUpdatedAt: new Date(now.getTime() - 3600000 * 5).toISOString(),
+      prerequisiteId: 'task-2',
+    },
+  ];
+}
+
+export const seedTasks = generateSeedTasks();

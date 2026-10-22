@@ -2,28 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { STAGES, TEAM } from '../App';
 import {
   CONTEXT_TOOLS,
+  TOOL_SCAFFOLDS,
   formatContextUpdated,
   serializeTaskPrompt,
   copyTextToClipboard,
 } from '../utils/contextHelper';
+import { useFocusTrap } from '../utils/useFocusTrap';
 
 /**
  * TaskModal Component
- * Modal dialog for creating new tasks or editing existing tasks.
- * Supports:
- * - Title (required)
- * - Description
- * - Type ('feature' | 'bug')
- * - Status ('todo' | 'in-progress' | 'review' | 'done')
- * - Assignee ('Teammate A', 'Teammate B', 'Teammate C' or custom)
- * - Due Date ('YYYY-MM-DD')
- * - M9 AI Context Briefing (curated briefing for next AI/teammate, contextTool, contextUpdatedAt)
- * - M10 Copy as Prompt Context hero action
- * - Delete action with confirmation when editing an existing task
- * - Backdrop click & Escape key to dismiss
+ * Accessible Modal dialog for creating new tasks or editing existing tasks.
+ * Complies with WCAG 2.1 AA dialog guidelines:
+ * - Trapped focus within modal container
+ * - Restore focus on close
+ * - Escape key dismiss
+ * - High-contrast focus indicators
+ * - Proper ARIA labels and error announcements
+ * - Real-time Live Prompt Preview per Target AI Tool (Milestone 12 Secret Sauce)
+ * - Upstream Prerequisite Task Lineage chaining
  */
 export default function TaskModal({
   task,
+  tasks = [],
   isOpen,
   onClose,
   onSave,
@@ -42,11 +42,18 @@ export default function TaskModal({
     context: '',
     contextTool: '',
     contextUpdatedAt: null,
+    prerequisiteId: '',
   });
 
   const [error, setError] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [briefingTab, setBriefingTab] = useState('editor'); // 'editor' | 'preview'
+
+  // Focus trap for dialog accessibility
+  const modalRef = useFocusTrap(isOpen, {
+    initialFocusSelector: '#task-title',
+  });
 
   useEffect(() => {
     if (task) {
@@ -60,6 +67,7 @@ export default function TaskModal({
         context: task.context || '',
         contextTool: task.contextTool || '',
         contextUpdatedAt: task.contextUpdatedAt || null,
+        prerequisiteId: task.prerequisiteId || '',
       });
     } else {
       setFormData({
@@ -72,11 +80,13 @@ export default function TaskModal({
         context: '',
         contextTool: '',
         contextUpdatedAt: null,
+        prerequisiteId: '',
       });
     }
     setError('');
     setShowDeleteConfirm(false);
     setIsCopied(false);
+    setBriefingTab('editor');
   }, [task, isOpen]);
 
   // Handle Escape key to close modal
@@ -103,20 +113,24 @@ export default function TaskModal({
     }
   };
 
-  const handleCopyPromptModal = async () => {
-    const currentDraft = {
-      title: formData.title || task?.title || 'Untitled Task',
-      type: formData.type,
-      status: formData.status,
-      assignee: formData.assignee,
-      dueDate: formData.dueDate || null,
-      description: formData.description,
-      context: formData.context,
-      contextTool: formData.contextTool || null,
-    };
+  // Build the live draft object for prompt serialization
+  const currentDraft = {
+    id: task?.id || 'new-task',
+    title: formData.title || task?.title || 'Untitled Task',
+    type: formData.type,
+    status: formData.status,
+    assignee: formData.assignee,
+    dueDate: formData.dueDate || null,
+    description: formData.description,
+    context: formData.context,
+    contextTool: formData.contextTool || null,
+    prerequisiteId: formData.prerequisiteId || null,
+  };
 
-    const promptText = serializeTaskPrompt(currentDraft);
-    const success = await copyTextToClipboard(promptText);
+  const livePrompt = serializeTaskPrompt(currentDraft, tasks);
+
+  const handleCopyPromptModal = async () => {
+    const success = await copyTextToClipboard(livePrompt);
     if (success) {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
@@ -124,6 +138,15 @@ export default function TaskModal({
         onCopyPrompt(currentDraft);
       }
     }
+  };
+
+  const handleApplyScaffold = () => {
+    const tool = formData.contextTool || 'Other';
+    const scaffold = TOOL_SCAFFOLDS[tool] || TOOL_SCAFFOLDS.Other;
+    setFormData((prev) => ({
+      ...prev,
+      context: prev.context ? `${prev.context.trim()}\n\n${scaffold}` : scaffold,
+    }));
   };
 
   const handleSubmit = (e) => {
@@ -161,6 +184,7 @@ export default function TaskModal({
       context: formData.context.trim(),
       contextTool: formData.contextTool || null,
       contextUpdatedAt: newContextUpdatedAt,
+      prerequisiteId: formData.prerequisiteId || null,
     };
 
     onSave(taskPayload);
@@ -172,37 +196,60 @@ export default function TaskModal({
     }
   };
 
+  // Available prerequisite tasks excluding the current editing task
+  const availablePrereqs = (tasks || []).filter((t) => t && t.id !== task?.id);
+
+  // Architecture badge helper
+  const getToolBadge = (tool) => {
+    switch (tool) {
+      case 'Claude':
+        return 'Anthropic XML Schema';
+      case 'Cursor':
+        return 'Cursor Composer Spec';
+      case 'ChatGPT':
+        return 'OpenAI CoT Architecture';
+      case 'Lovable':
+        return 'Tailwind UI Spec';
+      case 'Replit':
+        return 'Cloud Agent Runtime';
+      default:
+        return 'Standard Prompt Spec';
+    }
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn motion-reduce:animate-none overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-xl border border-slate-700/80 bg-surface-card p-6 shadow-2xl transition-all"
+        ref={modalRef}
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-slate-700/80 bg-surface-card p-6 shadow-2xl transition-all motion-reduce:transition-none"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-headline"
+        aria-labelledby="task-modal-headline"
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-700/60 pb-4">
           <div className="flex items-center gap-2">
             <span
               className={`inline-block h-2.5 w-2.5 rounded-full ${
-                formData.type === 'bug' ? 'bg-type-bug' : 'bg-type-feature'
+                formData.type === 'bug' ? 'bg-rose-500' : 'bg-emerald-500'
               }`}
+              aria-hidden="true"
             />
-            <h2 id="modal-headline" className="text-lg font-semibold text-text-primary">
+            <h2 id="task-modal-headline" className="text-lg font-semibold text-slate-100">
               {isEditing ? 'Edit Task' : 'Create New Task'}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-700/60 hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary"
-            aria-label="Close dialog"
+            className="rounded-lg p-1 text-slate-400 hover:bg-slate-700/60 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 transition-colors"
+            aria-label="Close task details modal"
           >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -213,23 +260,29 @@ export default function TaskModal({
           {/* Title */}
           <div>
             <label htmlFor="task-title" className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
-              Title <span className="text-red-400">*</span>
+              Title <span className="text-red-400" aria-hidden="true">*</span>
+              <span className="sr-only">(required)</span>
             </label>
             <input
               id="task-title"
               name="title"
               type="text"
+              required
+              aria-required="true"
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? 'task-title-error' : undefined}
               value={formData.title}
               onChange={handleChange}
               placeholder="e.g., Implement OAuth login flow"
-              className={`mt-1.5 w-full rounded-lg border bg-slate-900/90 px-3.5 py-2 text-sm text-text-primary placeholder-slate-500 shadow-inner focus:outline-none focus:ring-2 ${
-                error
-                  ? 'border-red-500/80 focus:ring-red-500'
-                  : 'border-slate-700 focus:border-brand-primary focus:ring-brand-primary/40'
+              className={`mt-1.5 w-full rounded-lg border bg-slate-900/90 px-3.5 py-2 text-sm text-slate-100 placeholder-slate-400 shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+                error ? 'border-red-500' : 'border-slate-700'
               }`}
-              autoFocus
             />
-            {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
+            {error && (
+              <p id="task-title-error" className="mt-1 text-xs text-red-400" role="alert">
+                {error}
+              </p>
+            )}
           </div>
 
           {/* Description */}
@@ -244,7 +297,7 @@ export default function TaskModal({
               value={formData.description}
               onChange={handleChange}
               placeholder="Add context, acceptance criteria, or implementation notes..."
-              className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-900/90 px-3.5 py-2 text-sm text-text-primary placeholder-slate-500 shadow-inner focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+              className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-900/90 px-3.5 py-2 text-sm text-slate-100 placeholder-slate-400 shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
             />
           </div>
 
@@ -259,7 +312,7 @@ export default function TaskModal({
                 name="type"
                 value={formData.type}
                 onChange={handleChange}
-                className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-900/90 px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-900/90 px-3 py-2 text-sm text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               >
                 <option value="feature">Feature</option>
                 <option value="bug">Bug</option>
@@ -275,7 +328,7 @@ export default function TaskModal({
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-900/90 px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-900/90 px-3 py-2 text-sm text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               >
                 {STAGES.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -297,7 +350,7 @@ export default function TaskModal({
                 name="assignee"
                 value={formData.assignee}
                 onChange={handleChange}
-                className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-900/90 px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-900/90 px-3 py-2 text-sm text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               >
                 {TEAM.map((member) => (
                   <option key={member} value={member}>
@@ -317,60 +370,120 @@ export default function TaskModal({
                 type="date"
                 value={formData.dueDate}
                 onChange={handleChange}
-                className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-900/90 px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-900/90 px-3 py-2 text-sm text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               />
             </div>
           </div>
 
-          {/* M9 & M10: Dedicated AI Context Briefing Section */}
-          <div className="rounded-xl border border-indigo-500/30 bg-slate-900/80 p-4 shadow-inner space-y-3">
+          {/* Milestone 12 Secret Sauce: Upstream Prerequisite Task Lineage */}
+          <div>
+            <label htmlFor="task-prerequisiteId" className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+              Prerequisite Task (Task Lineage Chaining)
+            </label>
+            <select
+              id="task-prerequisiteId"
+              name="prerequisiteId"
+              value={formData.prerequisiteId || ''}
+              onChange={handleChange}
+              className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-900/90 px-3 py-2 text-sm text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+            >
+              <option value="">None (Independent Task)</option>
+              {availablePrereqs.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.title} ({p.status === 'done' ? '✓ Done' : p.status})
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-slate-400">
+              Upstream prerequisite context and completion outputs are automatically chained into the prompt.
+            </p>
+          </div>
+
+          {/* M9, M10 & M12: Dedicated AI Context Briefing Section */}
+          <section
+            aria-labelledby="ai-briefing-heading"
+            className="rounded-xl border border-indigo-500/30 bg-slate-900/80 p-4 shadow-inner space-y-3"
+          >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800 pb-2.5">
               <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-primary/20 text-brand-primary border border-brand-primary/30">
+                <span
+                  className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-primary/20 text-brand-primary border border-brand-primary/30"
+                  aria-hidden="true"
+                >
                   <svg className="h-3.5 w-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </span>
                 <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-200">
+                  <h3 id="ai-briefing-heading" className="text-xs font-semibold uppercase tracking-wider text-slate-200">
                     AI Context Briefing
                   </h3>
-                  <p className="text-[11px] text-text-muted">
-                    Curated briefing for the next AI / teammate
+                  <p className="text-[11px] text-slate-400">
+                    Adaptive prompt generator for AI assistants & teammate handoffs
                   </p>
                 </div>
               </div>
 
-              {/* M10 Hero Button: Copy as Prompt Context */}
-              <button
-                type="button"
-                onClick={handleCopyPromptModal}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                  isCopied
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 ring-1 ring-emerald-500/50'
-                    : 'bg-brand-primary/20 text-indigo-200 border border-brand-primary/40 hover:bg-brand-primary/30 hover:text-white'
-                }`}
-                title="Copy task details and briefing formatted as an AI prompt"
-              >
-                {isCopied ? (
-                  <>
-                    <svg className="h-3.5 w-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Copied Prompt!</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-3.5 w-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                    </svg>
-                    <span>Copy as Prompt Context</span>
-                  </>
-                )}
-              </button>
+              {/* Action Buttons: Tab Switcher & Hero Copy Button */}
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Tab Switcher: Notes Editor vs Live Prompt Preview */}
+                <div className="flex rounded-lg border border-slate-700 bg-slate-950 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setBriefingTab('editor')}
+                    className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                      briefingTab === 'editor'
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    ✏️ Briefing Notes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBriefingTab('preview')}
+                    className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                      briefingTab === 'preview'
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    👁️ Live Prompt Preview
+                  </button>
+                </div>
+
+                {/* Hero Button: Copy as Prompt Context */}
+                <button
+                  type="button"
+                  onClick={handleCopyPromptModal}
+                  aria-label="Copy task details formatted as an AI prompt"
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+                    isCopied
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 ring-1 ring-emerald-500/50'
+                      : 'bg-brand-primary/20 text-indigo-200 border border-brand-primary/40 hover:bg-brand-primary/30 hover:text-white'
+                  }`}
+                  title="Copy task details and briefing formatted as an AI prompt"
+                >
+                  {isCopied ? (
+                    <>
+                      <svg className="h-3.5 w-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Copied Prompt!</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-3.5 w-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </svg>
+                      <span>Copy Prompt</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
-            {/* Tool Selector & Timestamp row */}
+            {/* Tool Selector & Active Architecture Badge */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div className="flex items-center gap-2">
                 <label htmlFor="task-contextTool" className="text-xs font-medium text-slate-300">
@@ -381,7 +494,7 @@ export default function TaskModal({
                   name="contextTool"
                   value={formData.contextTool || ''}
                   onChange={handleChange}
-                  className="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none"
+                  className="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                 >
                   <option value="">Unspecified</option>
                   {CONTEXT_TOOLS.map((tool) => (
@@ -390,46 +503,87 @@ export default function TaskModal({
                     </option>
                   ))}
                 </select>
+
+                <span className="inline-flex items-center rounded bg-slate-800 px-2 py-0.5 text-[10px] font-mono text-indigo-300 border border-slate-700">
+                  {getToolBadge(formData.contextTool)}
+                </span>
               </div>
 
-              {formData.contextUpdatedAt && (
-                <span className="text-[11px] font-mono text-slate-400">
-                  Last briefed: {formatContextUpdated(formData.contextUpdatedAt)}
-                </span>
+              {briefingTab === 'editor' && (
+                <button
+                  type="button"
+                  onClick={handleApplyScaffold}
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-300 hover:text-indigo-200 transition-colors"
+                  title="Insert starter template notes tailored for this AI tool"
+                >
+                  <span>🪄 Insert {formData.contextTool || 'Tool'} Scaffold</span>
+                </button>
               )}
             </div>
 
-            {/* Context Textarea */}
-            <div>
-              <textarea
-                id="task-context"
-                name="context"
-                rows={4}
-                value={formData.context}
-                onChange={handleChange}
-                placeholder="Curated briefing for the next AI / teammate (acceptance criteria, previous prompts, reproduction steps, technical notes)..."
-                className="w-full rounded-lg border border-slate-700 bg-slate-950/70 p-3 font-mono text-xs text-slate-200 placeholder-slate-500 shadow-inner focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
-              />
-            </div>
-          </div>
+            {/* TAB CONTENT: Notes Editor vs Live Prompt Preview */}
+            {briefingTab === 'editor' ? (
+              <div className="space-y-2">
+                <label htmlFor="task-context" className="sr-only">
+                  AI Context Briefing Details
+                </label>
+                <textarea
+                  id="task-context"
+                  name="context"
+                  rows={4}
+                  value={formData.context}
+                  onChange={handleChange}
+                  placeholder="Curated briefing for the next AI / teammate (acceptance criteria, reproduction steps, technical notes)..."
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950/70 p-3 font-mono text-xs text-slate-200 placeholder-slate-400 shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+                />
+                {formData.contextUpdatedAt && (
+                  <p className="text-[11px] font-mono text-slate-400 text-right">
+                    Last briefed: {formatContextUpdated(formData.contextUpdatedAt)}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <span>Dynamically serialized for {formData.contextTool || 'Standard AI'}:</span>
+                  <span className="font-mono text-indigo-300">Live preview updates on tool change</span>
+                </div>
+                <div className="relative rounded-lg border border-slate-800 bg-slate-950 p-3 shadow-inner">
+                  <pre
+                    className="max-h-60 overflow-y-auto whitespace-pre-wrap font-mono text-[11px] text-slate-300 leading-relaxed"
+                    tabIndex={0}
+                    aria-label="Serialized prompt preview"
+                  >
+                    {livePrompt}
+                  </pre>
+                </div>
+              </div>
+            )}
+          </section>
 
           {/* Action Footer */}
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between border-t border-slate-700/60 pt-4">
             {isEditing ? (
               showDeleteConfirm ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-red-400 font-medium">Delete task?</span>
+                <div
+                  role="alertdialog"
+                  aria-labelledby="delete-confirm-label"
+                  className="flex items-center gap-2"
+                >
+                  <span id="delete-confirm-label" className="text-xs text-red-400 font-medium">
+                    Delete task permanently?
+                  </span>
                   <button
                     type="button"
                     onClick={handleDelete}
-                    className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400"
+                    className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                   >
-                    Confirm Delete
+                    Yes, Delete
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowDeleteConfirm(false)}
-                    className="rounded-lg px-2 py-1.5 text-xs text-slate-400 hover:text-slate-200"
+                    className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                   >
                     Cancel
                   </button>
@@ -438,11 +592,8 @@ export default function TaskModal({
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 px-3 py-2 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:border-red-500/50 focus:outline-none focus:ring-2 focus:ring-red-500/40"
+                  className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 transition-colors"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
                   Delete Task
                 </button>
               )
@@ -450,17 +601,17 @@ export default function TaskModal({
               <div />
             )}
 
-            <div className="flex items-center justify-end gap-2.5">
+            <div className="flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg border border-slate-700 px-4 py-2 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-slate-500"
+                className="rounded-lg border border-slate-700 px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="rounded-lg bg-brand-primary px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-brand-primary/20 transition-all hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 focus:ring-offset-slate-900"
+                className="rounded-lg bg-brand-primary px-5 py-2 text-xs font-semibold text-white shadow-lg shadow-brand-primary/30 hover:bg-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 transition-colors"
               >
                 {isEditing ? 'Save Changes' : 'Create Task'}
               </button>
