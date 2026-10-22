@@ -6,7 +6,7 @@ import { getDueStatus } from '../utils/dueTint';
  *
  * Displays a badge reflecting task due date status with appropriate
  * icons, formatted label, and color tinting:
- * - Red/Rose for overdue & today
+ * - Red/Rose for overdue & today (with text prefix for colorblind accessibility)
  * - Amber for tomorrow / within 24h
  * - Emerald for > 24h
  * - Muted slate for completed tasks
@@ -16,7 +16,10 @@ export default function DueBadge({ dueDate, status, className = '' }) {
 
   if (!dueInfo.status) {
     return (
-      <span className={`text-[11px] text-slate-600 ${className}`}>
+      <span
+        className={`text-[11px] text-slate-400 ${className}`}
+        aria-label="No due date specified"
+      >
         {dueInfo.label}
       </span>
     );
@@ -26,6 +29,7 @@ export default function DueBadge({ dueDate, status, className = '' }) {
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-mono font-medium border transition-colors ${dueInfo.badgeClasses} ${className}`}
       title={`Due date: ${dueDate || 'None'}`}
+      aria-label={`Due date status: ${dueInfo.label}`}
     >
       {/* Due status icon */}
       {dueInfo.status === 'due-overdue' && (

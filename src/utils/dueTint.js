@@ -67,12 +67,12 @@ export function getDueStatus(dueDate, taskStatus, referenceDate = new Date()) {
     };
   }
 
-  // If no due date, return no tint
+  // If no due date, return no tint with WCAG AA compliant muted text
   if (!dueDate) {
     return {
       status: null,
       label: 'No due date',
-      badgeClasses: 'text-slate-600 bg-transparent border-transparent',
+      badgeClasses: 'text-slate-400 bg-transparent border-transparent',
       cardClasses: '',
       urgency: 'none',
       isOverdue: false,
@@ -85,7 +85,7 @@ export function getDueStatus(dueDate, taskStatus, referenceDate = new Date()) {
     return {
       status: null,
       label: dueDate,
-      badgeClasses: 'text-slate-500 bg-transparent border-transparent',
+      badgeClasses: 'text-slate-400 bg-transparent border-transparent',
       cardClasses: '',
       urgency: 'none',
       isOverdue: false,
