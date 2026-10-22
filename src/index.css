@@ -27,6 +27,15 @@
     outline-offset: 2px;
   }
 
+  /* Suppress container focus rings on main board target */
+  #main-board,
+  #main-board:focus,
+  #main-board:focus-visible,
+  #main-board:target {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
   /* Reduced motion support for vestibular disorder & motion sensitivity */
   @media (prefers-reduced-motion: reduce) {
     *, ::before, ::after {

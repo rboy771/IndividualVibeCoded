@@ -362,7 +362,7 @@ export default function App() {
           tabIndex={-1}
           role="main"
           aria-label="Kanban Task Board"
-          className="focus:outline-none"
+          className="outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0" onMouseDown={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
         >
           <Board
             stages={STAGES}
