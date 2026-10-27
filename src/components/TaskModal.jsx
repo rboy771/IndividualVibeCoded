@@ -24,6 +24,8 @@ import { useFocusTrap } from '../utils/useFocusTrap';
 export default function TaskModal({
   task,
   tasks = [],
+  teamMembers = TEAM,
+  currentUser = '',
   isOpen,
   onClose,
   onSave,
@@ -31,13 +33,20 @@ export default function TaskModal({
   onCopyPrompt,
 }) {
   const isEditing = Boolean(task && task.id);
+  const memberNames = Array.isArray(teamMembers) && teamMembers.length > 0
+    ? teamMembers.map((m) => (typeof m === 'string' ? m : m.name))
+    : TEAM;
+  const defaultAssignee =
+    currentUser && memberNames.includes(currentUser)
+      ? currentUser
+      : memberNames[0] || 'Teammate A';
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     type: 'feature',
     status: 'todo',
-    assignee: TEAM[0] || 'Teammate A',
+    assignee: defaultAssignee,
     dueDate: '',
     context: '',
     contextTool: '',
@@ -62,7 +71,7 @@ export default function TaskModal({
         description: task.description || '',
         type: task.type || 'feature',
         status: task.status || 'todo',
-        assignee: task.assignee || TEAM[0] || 'Teammate A',
+        assignee: task.assignee || defaultAssignee,
         dueDate: task.dueDate || '',
         context: task.context || '',
         contextTool: task.contextTool || '',
@@ -75,7 +84,7 @@ export default function TaskModal({
         description: '',
         type: 'feature',
         status: 'todo',
-        assignee: TEAM[0] || 'Teammate A',
+        assignee: defaultAssignee,
         dueDate: '',
         context: '',
         contextTool: '',
@@ -87,7 +96,7 @@ export default function TaskModal({
     setShowDeleteConfirm(false);
     setIsCopied(false);
     setBriefingTab('editor');
-  }, [task, isOpen]);
+  }, [task, isOpen, defaultAssignee]);
 
   // Handle Escape key to close modal
   useEffect(() => {
@@ -352,11 +361,16 @@ export default function TaskModal({
                 onChange={handleChange}
                 className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-900/90 px-3 py-2 text-sm text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               >
-                {TEAM.map((member) => (
+                {memberNames.map((member) => (
                   <option key={member} value={member}>
-                    {member}
+                    {member}{currentUser === member ? ' (You)' : ''}
                   </option>
                 ))}
+                {formData.assignee && !memberNames.includes(formData.assignee) && (
+                  <option value={formData.assignee}>
+                    {formData.assignee}
+                  </option>
+                )}
               </select>
             </div>
 

@@ -10,6 +10,9 @@ import TaskCard from './TaskCard';
 export default function Board({
   stages,
   tasks,
+  allTasks,
+  teamMembers,
+  currentUser,
   onStatusChange,
   onAssigneeChange,
   onTaskClick,
@@ -93,7 +96,9 @@ export default function Board({
                   <div role="listitem" key={task.id}>
                     <TaskCard
                       task={task}
-                      tasks={tasks}
+                      tasks={allTasks || tasks}
+                      teamMembers={teamMembers}
+                      currentUser={currentUser}
                       onStatusChange={onStatusChange}
                       onAssigneeChange={onAssigneeChange}
                       onCardClick={onTaskClick}

@@ -64,6 +64,8 @@ export function getAssigneeMeta(name) {
 export default function TaskCard({
   task,
   tasks = [],
+  teamMembers = TEAM,
+  currentUser = '',
   onStatusChange,
   onAssigneeChange,
   onCardClick,
@@ -72,8 +74,12 @@ export default function TaskCard({
 }) {
   const isFeature = task.type === 'feature';
   const assigneeMeta = getAssigneeMeta(task.assignee);
+  const isAssignedToCurrentUser = Boolean(currentUser && task.assignee === currentUser);
   const dueInfo = getDueStatus(task.dueDate, task.status);
   const [isCopied, setIsCopied] = useState(false);
+  const memberNames = Array.isArray(teamMembers) && teamMembers.length > 0
+    ? teamMembers.map((m) => (typeof m === 'string' ? m : m.name))
+    : TEAM;
 
   // Upstream prerequisite task resolution
   const prereq = task.prerequisiteId
@@ -319,32 +325,32 @@ export default function TaskCard({
       </div>
 
       {/* Meta info: Assignee badge + Quick hand-off & M8 Due date badge */}
-      <div className="mt-4 flex items-center justify-between border-t border-slate-700/60 pt-2.5 text-xs">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-700/60 pt-2.5 text-xs">
         {/* M7 Assignee badge + Quick hand-off dropdown */}
-        <div className="relative flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+        <div className="relative flex items-center gap-1.5 min-w-0" onClick={(e) => e.stopPropagation()}>
           <div
-            className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold border ${assigneeMeta.bg} ${assigneeMeta.text} ${assigneeMeta.border}`}
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold border ${assigneeMeta.bg} ${assigneeMeta.text} ${assigneeMeta.border}`}
             title={`Assignee: ${task.assignee || 'Unassigned'}`}
             aria-hidden="true"
           >
             {assigneeMeta.initials}
           </div>
 
-          <div className="relative">
+          <div className="relative min-w-0">
             <select
               value={task.assignee || ''}
               onChange={handleAssigneeSelect}
               onKeyDown={(e) => e.stopPropagation()}
-              className="appearance-none bg-slate-900/90 pl-2 pr-5 py-0.5 rounded text-xs font-medium text-slate-300 border border-slate-700 hover:border-slate-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 cursor-pointer transition-colors"
+              className="appearance-none bg-slate-900/90 pl-2 pr-5 py-0.5 rounded text-xs font-medium text-slate-300 border border-slate-700 hover:border-slate-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 cursor-pointer transition-colors max-w-[135px] truncate"
               title="Click to hand off task"
               aria-label={`Assign teammate for task: ${task.title}. Currently assigned to ${task.assignee || 'Unassigned'}`}
             >
-              {TEAM.map((member) => (
+              {memberNames.map((member) => (
                 <option key={member} value={member} className="bg-slate-900 text-slate-200">
-                  {member}
+                  {member}{currentUser === member ? ' (You)' : ''}
                 </option>
               ))}
-              {task.assignee && !TEAM.includes(task.assignee) && (
+              {task.assignee && !memberNames.includes(task.assignee) && (
                 <option value={task.assignee} className="bg-slate-900 text-slate-200">
                   {task.assignee}
                 </option>

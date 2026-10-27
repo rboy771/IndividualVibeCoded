@@ -27,7 +27,7 @@ export default function DueBadge({ dueDate, status, className = '' }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-mono font-medium border transition-colors ${dueInfo.badgeClasses} ${className}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-full px-2 py-0.5 text-[11px] font-mono font-medium border transition-colors ${dueInfo.badgeClasses} ${className}`}
       title={`Due date: ${dueDate || 'None'}`}
       aria-label={`Due date status: ${dueInfo.label}`}
     >
