@@ -180,7 +180,7 @@ export default function App() {
     'Teammate A'
   );
 
-  // Auto-migrate any old @cardiff.ac.uk emails stored in browser localStorage to generic @workspace.dev emails
+  // Auto-migrate any old @cardiff.ac.uk emails or hardcoded repo links stored in browser localStorage
   useEffect(() => {
     const hasOldEmail = teamMembers.some(
       (m) => m.email && m.email.toLowerCase().includes('cardiff.ac.uk')
@@ -199,7 +199,20 @@ export default function App() {
         })
       );
     }
-  }, [teamMembers, setTeamMembers]);
+
+    const hasOldRepoUrl = mainAnchors.some(
+      (a) => a.url && a.url.toLowerCase().includes('github.com/')
+    );
+    if (hasOldRepoUrl) {
+      setMainAnchors((prev) =>
+        prev.map((a) =>
+          a.url && a.url.toLowerCase().includes('github.com/')
+            ? { ...a, url: 'https://docs.workspace.dev/vibetracker' }
+            : a
+        )
+      );
+    }
+  }, [teamMembers, setTeamMembers, mainAnchors, setMainAnchors]);
 
   const [filterMyTasks, setFilterMyTasks] = useState(false);
   const [isBackendOnline, setIsBackendOnline] = useState(false);
